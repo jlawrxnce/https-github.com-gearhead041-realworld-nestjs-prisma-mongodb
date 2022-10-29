@@ -14,12 +14,10 @@ For more information on how to this works with other frontends/backends, head ov
 
 
 # How it works
-
-> Describe the general architecture of your app here
-
+This implementation works with nestjs connected to a mongodb database running as a replica set. The database transactions are carried out with prisma as a orm.
 # Getting started
 To run locally ensure mongodb is installed on your system and a mongod process is running as a replication set.
-To start a mongod process as a replication set look ![here](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/)
+To start a mongod process as a replication set look [here](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/)
 ## Installation
 
 ```bash
@@ -27,7 +25,11 @@ $ npm install
 ```
 
 ## Running the app
-
+In a different console
+```bash
+mongod --replSet rs0
+```
+In a different console
 ```bash
 # development
 $ npm run start

@@ -1,4 +1,4 @@
-# ![RealWorld Example App](https://nestjs.com/img/logo-small.svg)
+# ![RealWorld Example App](logo.png)
 
 > ### Nestjs codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 

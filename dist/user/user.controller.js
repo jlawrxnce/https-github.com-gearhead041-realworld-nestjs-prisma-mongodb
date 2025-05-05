@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
 const common_1 = require("@nestjs/common");
+const get_token_decorator_1 = require("../common/decorator/get-token.decorator");
 const get_user_decorator_1 = require("../common/decorator/get-user.decorator");
 const guard_1 = require("../common/guard");
 const user_service_1 = require("./user.service");
@@ -21,26 +22,29 @@ let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
-    getCurrentUser(user) {
-        return { user: user };
+    getCurrentUser(user, token) {
+        return { user: Object.assign(Object.assign({}, user), { token }) };
     }
-    async updateUser(user, dto) {
-        return { user: await this.userService.updateUser(user, dto) };
+    async updateUser(user, dto, token) {
+        const updatedUser = await this.userService.updateUser(user, dto);
+        return { user: Object.assign(Object.assign({}, updatedUser), { token }) };
     }
 };
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, get_user_decorator_1.GetUser)()),
+    __param(1, (0, get_token_decorator_1.GetToken)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "getCurrentUser", null);
 __decorate([
     (0, common_1.Put)(),
     __param(0, (0, get_user_decorator_1.GetUser)()),
     __param(1, (0, common_1.Body)('user')),
+    __param(2, (0, get_token_decorator_1.GetToken)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, String]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "updateUser", null);
 UserController = __decorate([

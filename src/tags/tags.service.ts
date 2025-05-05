@@ -13,7 +13,7 @@ export class TagsService {
     });
     const flatTags = tags
       .map((tagList) => tagList.tagList)
-      .reduce((a, b) => a.concat(b));
+      .reduce((a, b) => a.concat(b), []);
     const returnTags: string[] = [];
     flatTags.forEach((tag) => {
       if (!(returnTags?.includes(tag) || false)) returnTags.push(tag);

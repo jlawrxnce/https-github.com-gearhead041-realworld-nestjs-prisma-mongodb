@@ -24,7 +24,7 @@ let TagsService = class TagsService {
         });
         const flatTags = tags
             .map((tagList) => tagList.tagList)
-            .reduce((a, b) => a.concat(b));
+            .reduce((a, b) => a.concat(b), []);
         const returnTags = [];
         flatTags.forEach((tag) => {
             if (!((returnTags === null || returnTags === void 0 ? void 0 : returnTags.includes(tag)) || false))

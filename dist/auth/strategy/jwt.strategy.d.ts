@@ -10,12 +10,22 @@ export declare class JwtStrategy extends JwtStrategy_base {
         sub: string;
         email: string;
     }): Promise<{
-        email: string;
-        username: string;
-        bio: string;
-        image: string;
-        followers: import(".prisma/client").User[];
         id: string;
+        email: string;
+        bio: string;
+        username: string;
+        followers: (import("@prisma/client/runtime").GetResult<{
+            id: string;
+            email: string;
+            username: string;
+            bio: string;
+            image: string;
+            password: string;
+            followersIds: string[];
+            followingIds: string[];
+            articlesLikedIds: string[];
+        }, unknown, never> & {})[];
+        image: string;
     }>;
 }
 export {};

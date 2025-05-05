@@ -18,6 +18,16 @@ import { ArticlesService } from './articles.service';
 
 @Controller('articles')
 export class ArticlesController {
+  @Put(':slug/paywall')
+  @UseGuards(JwtGuard)
+  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
+    const article = await this.articleService.findArticle(user, slug);
+    const updatedArticle = await this.articleService.updateArticle(slug, user, {
+      hasPaywall: !article.hasPaywall,
+    });
+    return { article: updatedArticle };
+  }
+
   constructor(private articleService: ArticlesService) {}
 
   @Get()

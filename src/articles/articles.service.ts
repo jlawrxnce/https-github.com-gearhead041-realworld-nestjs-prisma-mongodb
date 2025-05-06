@@ -270,7 +270,6 @@ export class ArticlesService {
       },
     });
     if (article === null) throw new NotFoundException('article not found');
-
     await this.checkPaywallAccess(article.id, user);
 
     return article.comments.map((comment) => {

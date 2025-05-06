@@ -15,6 +15,7 @@ const tags_module_1 = require("./tags/tags.module");
 const user_module_1 = require("./user/user.module");
 const articles_module_1 = require("./articles/articles.module");
 const config_1 = require("@nestjs/config");
+const membership_module_1 = require("./membership/membership.module");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -25,6 +26,7 @@ AppModule = __decorate([
             auth_module_1.AuthModule,
             tags_module_1.TagsModule,
             user_module_1.UserModule,
+            membership_module_1.MembershipModule,
             articles_module_1.ArticlesModule,
             config_1.ConfigModule.forRoot({
                 isGlobal: true,

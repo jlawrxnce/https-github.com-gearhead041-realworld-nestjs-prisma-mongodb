@@ -23,7 +23,10 @@ export class MembershipController {
     @GetUser() user: User,
     @Body('membership') membershipData: MembershipData,
   ): Promise<MembershipRO> {
-    const membership = await this.membershipService.createMembership(user, membershipData);
+    const membership = await this.membershipService.createMembership(
+      user,
+      membershipData,
+    );
     return { membership };
   }
 
@@ -32,15 +35,18 @@ export class MembershipController {
     @GetUser() user: User,
     @Body('membership') membershipData: MembershipData,
   ): Promise<MembershipRO> {
-    const membership = await this.membershipService.updateMembership(user, membershipData);
+    const membership = await this.membershipService.updateMembership(
+      user,
+      membershipData,
+    );
     return { membership };
   }
 
-  @Get(':username')
-  async getMembership(
-    @Param('username') username: string,
-  ): Promise<MembershipRO> {
-    const membership = await this.membershipService.getMembership(username);
+  @Get()
+  async getMembership(@GetUser() user: User): Promise<MembershipRO> {
+    const membership = await this.membershipService.getMembership(
+      user.username,
+    );
     return { membership };
   }
 }

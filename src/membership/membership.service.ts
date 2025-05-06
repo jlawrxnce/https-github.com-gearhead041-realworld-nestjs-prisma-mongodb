@@ -19,11 +19,14 @@ export class MembershipService {
       throw new ForbiddenException('Cannot activate Free tier membership');
     }
 
+    const renewalDate = new Date(
+      new Date().setMonth(new Date().getMonth() + 1),
+    );
     const membership = await this.prisma.membership.create({
       data: {
         tier: data.tier,
         autoRenew: data.autoRenew ?? false,
-        renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        renewalDate: renewalDate,
         userId: user.id,
       },
       include: {
@@ -49,7 +52,7 @@ export class MembershipService {
     });
 
     if (!membership) {
-      throw new NotFoundException('Membership not found');
+      throw new ForbiddenException('Free tier users cannot update membership');
     }
 
     if (membership.tier === Tier.Free) {
@@ -60,7 +63,8 @@ export class MembershipService {
       where: { userId: user.id },
       data: {
         tier: data.tier,
-        autoRenew: data.autoRenew !== undefined ? data.autoRenew : membership.autoRenew,
+        autoRenew:
+          data.autoRenew !== undefined ? data.autoRenew : membership.autoRenew,
       },
       include: { user: true },
     });
@@ -91,7 +95,6 @@ export class MembershipService {
         autoRenew: false,
       };
     }
-
     return {
       username: user.username,
       tier: user.membership.tier,
@@ -102,7 +105,7 @@ export class MembershipService {
 
   async hasGoldAccess(user: User | null): Promise<boolean> {
     if (!user) return false;
-    
+
     const membership = await this.prisma.membership.findUnique({
       where: { userId: user.id },
     });

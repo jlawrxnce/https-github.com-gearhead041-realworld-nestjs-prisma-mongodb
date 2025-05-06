@@ -22,7 +22,7 @@ export class JwtGuard extends AuthGuard('jwt') {
       context.getHandler(),
     );
     if (user) return user;
-    if (allowAny) return true;
+    if (allowAny) return null;
     throw new UnauthorizedException();
   }
 }

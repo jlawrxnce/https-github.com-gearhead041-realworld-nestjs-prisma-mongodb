@@ -41,7 +41,6 @@ let ProfilesService = class ProfilesService {
             },
         });
         const profile = (0, dto_1.castToProfile)(userFollowed, true);
-        console.log('profile', profile);
         return profile;
     }
     async unfollowUser(user, username) {

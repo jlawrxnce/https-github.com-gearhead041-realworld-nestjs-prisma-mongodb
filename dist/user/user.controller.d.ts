@@ -7,8 +7,8 @@ export declare class UserController {
     getCurrentUser(user: User, token: string): {
         user: {
             token: string;
-            id: string;
             email: string;
+            id: string;
             username: string;
             bio: string;
             image: string;
@@ -21,8 +21,8 @@ export declare class UserController {
     updateUser(user: User, dto: UserForUpdate, token: string): Promise<{
         user: {
             token: string;
-            id: string;
             email: string;
+            id: string;
             username: string;
             bio: string;
             image: string;

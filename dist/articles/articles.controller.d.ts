@@ -1,13 +1,8 @@
 import { User } from '@prisma/client';
 import { ArticlesService } from './articles.service';
-import { MembershipService } from '../membership/membership.service';
 export declare class ArticlesController {
     private articleService;
-    private membershipService;
-    togglePaywall(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
-    constructor(articleService: ArticlesService, membershipService: MembershipService);
+    constructor(articleService: ArticlesService);
     getAllArticles(user: User, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<{
         articles: import("./dto").ArticleDto[];
         articlesCount: number;
@@ -29,7 +24,7 @@ export declare class ArticlesController {
     addCommentToArticle(user: User, slug: string, dto: any): Promise<{
         comment: import("./dto").CommentDto;
     }>;
-    getCommentsForArticle(slug: string, user: User | null): Promise<{
+    getCommentsForArticle(slug: string): Promise<{
         comments: import("./dto").CommentDto[];
     }>;
     deleteComment(slug: string, id: string): Promise<void>;

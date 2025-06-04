@@ -15,32 +15,10 @@ import { User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
 import { JwtGuard } from '../common/guard';
 import { ArticlesService } from './articles.service';
-import { MembershipService } from '../membership/membership.service';
-import { ForbiddenException } from '@nestjs/common';
 
 @Controller('articles')
 export class ArticlesController {
-  @Put(':slug/paywall')
-  @UseGuards(JwtGuard)
-  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
-    const hasGoldAccess = await this.membershipService.hasGoldAccess(user);
-    if (!hasGoldAccess) {
-      throw new ForbiddenException(
-        'Only gold members can toggle article paywall',
-      );
-    }
-
-    const article = await this.articleService.findArticle(user, slug);
-    const updatedArticle = await this.articleService.updateArticle(user, slug, {
-      hasPaywall: !article.hasPaywall,
-    });
-    return { article: updatedArticle };
-  }
-
-  constructor(
-    private articleService: ArticlesService,
-    private membershipService: MembershipService,
-  ) {}
+  constructor(private articleService: ArticlesService) {}
 
   @Get()
   @UseGuards(JwtGuard)
@@ -86,9 +64,7 @@ export class ArticlesController {
     };
   }
 
-  @UseGuards(JwtGuard)
   @Get(':slug')
-  @AllowAny()
   async getArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.findArticle(user, slug) };
   }
@@ -136,16 +112,9 @@ export class ArticlesController {
     };
   }
 
-  @UseGuards(JwtGuard)
   @Get(':slug/comments')
-  @AllowAny()
-  async getCommentsForArticle(
-    @Param('slug') slug: string,
-    @GetUser() user: User | null,
-  ) {
-    return {
-      comments: await this.articleService.getCommentsForArticle(slug, user),
-    };
+  async getCommentsForArticle(@Param('slug') slug: string) {
+    return { comments: await this.articleService.getCommentsForArticle(slug) };
   }
 
   @UseGuards(JwtGuard)

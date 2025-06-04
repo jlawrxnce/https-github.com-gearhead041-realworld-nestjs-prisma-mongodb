@@ -12,7 +12,6 @@ function castToArticle(article, user, tags, author) {
         updatedAt: article.updatedAt,
         favorited: article.favouritedUserIds.includes(user === null || user === void 0 ? void 0 : user.id) || false,
         favoritesCount: article.favouritedUserIds.length,
-        hasPaywall: article.hasPaywall,
         author: author,
     };
 }

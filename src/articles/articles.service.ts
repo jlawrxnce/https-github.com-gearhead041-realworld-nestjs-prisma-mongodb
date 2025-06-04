@@ -1,9 +1,10 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { MembershipTier, User } from '@prisma/client';
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -20,6 +21,39 @@ import {
 
 @Injectable()
 export class ArticlesService {
+  async togglePaywall(user: User, slug: string) {
+    const userWithMembership = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { membershipTier: true },
+    });
+
+    if (userWithMembership?.membershipTier !== MembershipTier.Gold) {
+      throw new ForbiddenException('Only Gold members can toggle paywalls');
+    }
+
+    const article = await this.prisma.article.findUnique({
+      where: { slug },
+      include: { author: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    if (article.authorId !== user.id) {
+      throw new ForbiddenException('Only the article author can toggle its paywall');
+    }
+
+    const updatedArticle = await this.prisma.article.update({
+      where: { slug },
+      data: { hasPaywall: !article.hasPaywall },
+      include: { author: true },
+    });
+
+    const following = updatedArticle.author?.followersIds?.includes(user?.id) || false;
+    const authorProfile = castToProfile(updatedArticle.author, following);
+    return castToArticle(updatedArticle, user, updatedArticle.tagList, authorProfile);
+  }
   constructor(private prisma: PrismaService) {}
 
   async findArticles(

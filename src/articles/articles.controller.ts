@@ -14,6 +14,7 @@ import {
 import { User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
 import { JwtGuard } from '../common/guard';
+import { PaywallGuard } from './guard';
 import { ArticlesService } from './articles.service';
 
 @Controller('articles')
@@ -21,7 +22,7 @@ export class ArticlesController {
   constructor(private articleService: ArticlesService) {}
 
   @Get()
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @AllowAny()
   async getAllArticles(
     @GetUser() user: User,
@@ -65,6 +66,8 @@ export class ArticlesController {
   }
 
   @Get(':slug')
+  @UseGuards(JwtGuard, PaywallGuard)
+  @AllowAny()
   async getArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.findArticle(user, slug) };
   }
@@ -96,12 +99,12 @@ export class ArticlesController {
     return this.articleService.deleteArticle(slug);
   }
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @Post(':slug/comments')
   async addCommentToArticle(
     @GetUser() user: User,
     @Param('slug') slug: string,
-    @Body() dto,
+    @Body() dto: any,
   ) {
     return {
       comment: await this.articleService.addCommentToArticle(
@@ -112,6 +115,7 @@ export class ArticlesController {
     };
   }
 
+  @UseGuards(PaywallGuard)
   @Get(':slug/comments')
   async getCommentsForArticle(@Param('slug') slug: string) {
     return { comments: await this.articleService.getCommentsForArticle(slug) };
@@ -123,13 +127,13 @@ export class ArticlesController {
     return this.articleService.deleteCommentForArticle(slug, id);
   }
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @Post(':slug/favorite')
   async favoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.favouriteArticle(user, slug) };
   }
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @Delete(':slug/favorite')
   async unfavoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return {

@@ -92,6 +92,9 @@ export class MembershipService {
   }
 
   async checkGoldMembership(userId: string): Promise<boolean> {
+    if (!userId) {
+      return false;
+    }
     const membership = await this.prisma.membership.findUnique({
       where: {
         userId,

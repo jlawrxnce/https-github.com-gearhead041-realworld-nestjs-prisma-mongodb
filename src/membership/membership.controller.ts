@@ -3,7 +3,11 @@ import { MembershipService } from './membership.service';
 import { JwtGuard } from '../common/guard';
 import { GetUser } from '../common/decorator';
 import { User } from '@prisma/client';
-import { MembershipDto, MembershipTier, MembershipUpdateDto } from './dto';
+import {
+  MembershipActivateDto,
+  MembershipDto,
+  MembershipUpdateDto,
+} from './dto';
 
 @Controller('membership')
 export class MembershipController {
@@ -13,9 +17,12 @@ export class MembershipController {
   @UseGuards(JwtGuard)
   async activateMembership(
     @GetUser() user: User,
-    @Body('tier') tier: MembershipTier,
+    @Body('membership') dto: MembershipActivateDto,
   ): Promise<{ membership: MembershipDto }> {
-    const membership = await this.membershipService.activateMembership(user, tier);
+    const membership = await this.membershipService.activateMembership(
+      user,
+      dto.tier,
+    );
     return { membership };
   }
 
@@ -23,7 +30,7 @@ export class MembershipController {
   @UseGuards(JwtGuard)
   async updateMembership(
     @GetUser() user: User,
-    @Body() dto: MembershipUpdateDto,
+    @Body('membership') dto: MembershipUpdateDto,
   ): Promise<{ membership: MembershipDto }> {
     const membership = await this.membershipService.updateMembership(user, dto);
     return { membership };

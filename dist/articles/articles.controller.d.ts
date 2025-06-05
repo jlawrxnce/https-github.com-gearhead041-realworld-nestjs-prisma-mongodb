@@ -34,4 +34,7 @@ export declare class ArticlesController {
     unfavoriteArticle(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
+    togglePaywall(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
 }

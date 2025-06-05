@@ -20,6 +20,7 @@ export interface ArticleDto {
     favoritesCount: number;
     author: ProfileDto;
     favorited: boolean;
+    hasPaywall: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

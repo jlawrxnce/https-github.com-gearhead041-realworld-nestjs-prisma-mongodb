@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,8 +10,10 @@ import {
   PrismaClientValidationError,
 } from '@prisma/client/runtime';
 import { PrismaService } from '../prisma/prisma.service';
+import { MembershipService } from '../membership/membership.service';
 import { castToProfile, ProfileDto } from '../profiles/dto';
 import {
+  ArticleDto,
   ArticleForCreateDto,
   ArticleForUpdateDto,
   castToArticle,
@@ -20,7 +23,10 @@ import {
 
 @Injectable()
 export class ArticlesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private membershipService: MembershipService,
+  ) {}
 
   async findArticles(
     user: User,
@@ -305,6 +311,71 @@ export class ArticlesService {
       user,
       article.tagList,
       castToProfile(articleUpdated.author, isfollowing),
+    );
+  }
+
+  async togglePaywall(user: User, slug: string): Promise<ArticleDto> {
+    // Find the article
+    const article = await this.prisma.article.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          include: {
+            followers: true,
+          },
+        },
+        favouritedUsers: true,
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Check if user is the author
+    if (article.authorId !== user.id) {
+      throw new ForbiddenException('You are not the author of this article');
+    }
+
+    // Check if user has Gold membership
+    const hasGoldMembership = await this.membershipService.checkGoldMembership(
+      user.id,
+    );
+    if (!hasGoldMembership) {
+      throw new ForbiddenException(
+        'Only Gold members can toggle article paywall',
+      );
+    }
+
+    // Toggle paywall status
+    const updatedArticle = await this.prisma.article.update({
+      where: { slug },
+      data: {
+        hasPaywall: !article.hasPaywall,
+      },
+      include: {
+        author: {
+          include: {
+            followers: true,
+          },
+        },
+        favouritedUsers: true,
+      },
+    });
+
+    // Get following status
+    const following = user
+      ? updatedArticle.author.followers.some(
+          (follower) => follower.id === user.id,
+        )
+      : false;
+
+    // Return formatted article
+    return castToArticle(
+      updatedArticle,
+      user,
+      updatedArticle.tagList,
+      castToProfile(updatedArticle.author, following),
     );
   }
 }

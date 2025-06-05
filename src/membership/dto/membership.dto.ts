@@ -12,6 +12,10 @@ export interface MembershipDto {
   autoRenew: boolean;
 }
 
+export interface MembershipActivateDto {
+  tier: MembershipTier;
+}
+
 export interface MembershipUpdateDto {
   tier: MembershipTier;
   autoRenew: boolean;

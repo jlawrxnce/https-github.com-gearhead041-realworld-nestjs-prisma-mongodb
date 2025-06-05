@@ -13,11 +13,13 @@ exports.ArticlesService = void 0;
 const common_1 = require("@nestjs/common");
 const runtime_1 = require("@prisma/client/runtime");
 const prisma_service_1 = require("../prisma/prisma.service");
+const membership_service_1 = require("../membership/membership.service");
 const dto_1 = require("../profiles/dto");
 const dto_2 = require("./dto");
 let ArticlesService = class ArticlesService {
-    constructor(prisma) {
+    constructor(prisma, membershipService) {
         this.prisma = prisma;
+        this.membershipService = membershipService;
     }
     async findArticles(user, tag, author, favorited, limit = 10, offset = 0) {
         let articles = await this.prisma.article.findMany({
@@ -252,10 +254,52 @@ let ArticlesService = class ArticlesService {
         const isfollowing = ((_a = articleUpdated.author) === null || _a === void 0 ? void 0 : _a.followersIds.includes(user.id)) || false;
         return (0, dto_2.castToArticle)(article, user, article.tagList, (0, dto_1.castToProfile)(articleUpdated.author, isfollowing));
     }
+    async togglePaywall(user, slug) {
+        const article = await this.prisma.article.findUnique({
+            where: { slug },
+            include: {
+                author: {
+                    include: {
+                        followers: true,
+                    },
+                },
+                favouritedUsers: true,
+            },
+        });
+        if (!article) {
+            throw new common_1.NotFoundException('Article not found');
+        }
+        if (article.authorId !== user.id) {
+            throw new common_1.ForbiddenException('You are not the author of this article');
+        }
+        const hasGoldMembership = await this.membershipService.checkGoldMembership(user.id);
+        if (!hasGoldMembership) {
+            throw new common_1.ForbiddenException('Only Gold members can toggle article paywall');
+        }
+        const updatedArticle = await this.prisma.article.update({
+            where: { slug },
+            data: {
+                hasPaywall: !article.hasPaywall,
+            },
+            include: {
+                author: {
+                    include: {
+                        followers: true,
+                    },
+                },
+                favouritedUsers: true,
+            },
+        });
+        const following = user
+            ? updatedArticle.author.followers.some((follower) => follower.id === user.id)
+            : false;
+        return (0, dto_2.castToArticle)(updatedArticle, user, updatedArticle.tagList, (0, dto_1.castToProfile)(updatedArticle.author, following));
+    }
 };
 ArticlesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        membership_service_1.MembershipService])
 ], ArticlesService);
 exports.ArticlesService = ArticlesService;
 //# sourceMappingURL=articles.service.js.map

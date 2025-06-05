@@ -22,7 +22,7 @@ export class ArticlesController {
   constructor(private articleService: ArticlesService) {}
 
   @Get()
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @AllowAny()
   async getAllArticles(
     @GetUser() user: User,
@@ -115,8 +115,9 @@ export class ArticlesController {
     };
   }
 
-  @UseGuards(PaywallGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @Get(':slug/comments')
+  @AllowAny()
   async getCommentsForArticle(@Param('slug') slug: string) {
     return { comments: await this.articleService.getCommentsForArticle(slug) };
   }
@@ -139,5 +140,13 @@ export class ArticlesController {
     return {
       article: await this.articleService.unfavouriteArticle(user, slug),
     };
+  }
+
+  // Add this new endpoint
+  @Put(':slug/paywall')
+  @UseGuards(JwtGuard)
+  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
+    const article = await this.articleService.togglePaywall(user, slug);
+    return { article };
   }
 }

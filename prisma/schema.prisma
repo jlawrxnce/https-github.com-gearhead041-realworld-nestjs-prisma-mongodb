@@ -10,11 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum MembershipTier {
-  Free
-  Gold
-}
-
 model User{
   id String @id @default(auto())  @map("_id") @db.ObjectId
   email String @unique
@@ -22,9 +17,6 @@ model User{
   bio String?
   image String?
   password String
-  membershipTier MembershipTier @default(Free)
-  membershipRenewalDate DateTime?
-  membershipAutoRenew Boolean @default(false)
   comments Comment[]
   articles Article[]
   followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])
@@ -43,7 +35,6 @@ model Article {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   body String
-  hasPaywall Boolean @default(false)
   tagList String[] @default([])
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId

@@ -23,7 +23,6 @@ export interface ArticleDto {
   favoritesCount: number;
   author: ProfileDto;
   favorited: boolean;
-  hasPaywall: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,7 +43,6 @@ export function castToArticle(
     updatedAt: article.updatedAt,
     favorited: article.favouritedUserIds.includes(user?.id) || false,
     favoritesCount: article.favouritedUserIds.length,
-    hasPaywall: article.hasPaywall,
     author: author,
   };
 }

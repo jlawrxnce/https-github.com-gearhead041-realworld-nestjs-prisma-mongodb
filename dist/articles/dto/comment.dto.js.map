@@ -1,0 +1,1 @@
+{"version":3,"file":"comment.dto.js","sourceRoot":"","sources":["../../../src/articles/dto/comment.dto.ts"],"names":[],"mappings":";;;AAcA,SAAgB,gBAAgB,CAC9B,OAAgB,EAChB,MAAkB;IAElB,OAAO;QACL,EAAE,EAAE,OAAO,CAAC,EAAE;QACd,SAAS,EAAE,OAAO,CAAC,SAAS;QAC5B,SAAS,EAAE,OAAO,CAAC,SAAS;QAC5B,IAAI,EAAE,OAAO,CAAC,IAAI;QAClB,MAAM,EAAE,MAAM;KACf,CAAC;AACJ,CAAC;AAXD,4CAWC"}

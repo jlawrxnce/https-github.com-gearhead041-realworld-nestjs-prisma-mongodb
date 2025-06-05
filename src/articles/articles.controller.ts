@@ -13,21 +13,11 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
-import { JwtGuard, PaywallGuard } from '../common/guard';
+import { JwtGuard } from '../common/guard';
 import { ArticlesService } from './articles.service';
 
 @Controller('articles')
 export class ArticlesController {
-  @UseGuards(JwtGuard)
-  @Put(':slug/paywall')
-  async togglePaywall(
-    @GetUser() user: User,
-    @Param('slug') slug: string,
-  ) {
-    return {
-      article: await this.articleService.togglePaywall(user, slug),
-    };
-  }
   constructor(private articleService: ArticlesService) {}
 
   @Get()
@@ -75,8 +65,6 @@ export class ArticlesController {
   }
 
   @Get(':slug')
-  @UseGuards(PaywallGuard)
-  @AllowAny()
   async getArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.findArticle(user, slug) };
   }
@@ -108,7 +96,7 @@ export class ArticlesController {
     return this.articleService.deleteArticle(slug);
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Post(':slug/comments')
   async addCommentToArticle(
     @GetUser() user: User,
@@ -135,13 +123,13 @@ export class ArticlesController {
     return this.articleService.deleteCommentForArticle(slug, id);
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Post(':slug/favorite')
   async favoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.favouriteArticle(user, slug) };
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Delete(':slug/favorite')
   async unfavoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return {

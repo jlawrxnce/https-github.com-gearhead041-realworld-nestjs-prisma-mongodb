@@ -20,6 +20,53 @@ import { ForbiddenException } from '@nestjs/common';
 
 @Controller('articles')
 export class ArticlesController {
+  @Put(':slug/view')
+  @UseGuards(JwtGuard)
+  async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
+    const article = await this.articleService.findArticle(user, slug);
+    
+    // PaywallCheck
+    if (article.hasPaywall) {
+      const membership = await this.membershipService.getMembership(
+        user.username,
+      );
+      if (
+        !membership ||
+        membership.tier === 'SILVER' ||
+        membership.tier === 'FREE'
+      ) {
+        return { article: {} };
+      }
+    }
+
+    // Don't count author's own views
+    if (article.author.username === user.username) {
+      return { article };
+    }
+
+    // Calculate revenue if article has paywall
+    let revenueEarned = 0;
+    if (article.hasPaywall) {
+      const authorMembership = await this.membershipService.getMembership(
+        article.author.username,
+      );
+      if (authorMembership) {
+        revenueEarned = authorMembership.tier === 'GOLD' ? 0.25 : 0.10;
+        await this.membershipService.addRevenue(
+          article.author.username,
+          revenueEarned,
+        );
+      }
+    }
+
+    const updatedArticle = await this.articleService.incrementViews(
+      slug,
+      user.id,
+      revenueEarned,
+    );
+
+    return { article: updatedArticle };
+  }
   @Put(':slug/paywall')
   @UseGuards(JwtGuard)
   async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {

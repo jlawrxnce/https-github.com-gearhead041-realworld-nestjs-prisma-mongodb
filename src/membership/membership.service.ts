@@ -5,17 +5,34 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MembershipData, MembershipResponse } from './dto/membership.dto';
-import { Tier, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class MembershipService {
+  async addRevenue(username: string, amount: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      include: { membership: true },
+    });
+
+    if (!user || !user.membership) {
+      throw new NotFoundException('User membership not found');
+    }
+
+    await this.prisma.membership.update({
+      where: { userId: user.id },
+      data: {
+        totalRevenue: { increment: amount },
+      },
+    });
+  }
   constructor(private prisma: PrismaService) {}
 
   async createMembership(
     user: User,
     data: MembershipData,
   ): Promise<MembershipResponse> {
-    if (data.tier === Tier.Free) {
+    if (data.tier === 'FREE') {
       throw new ForbiddenException('Cannot activate Free tier membership');
     }
 
@@ -39,6 +56,7 @@ export class MembershipService {
       tier: membership.tier,
       renewalDate: membership.renewalDate,
       autoRenew: membership.autoRenew,
+      totalRevenue: membership.totalRevenue || 0,
     };
   }
 
@@ -55,7 +73,7 @@ export class MembershipService {
       throw new ForbiddenException('Free tier users cannot update membership');
     }
 
-    if (membership.tier === Tier.Free) {
+    if (membership.tier === 'FREE') {
       throw new ForbiddenException('Free tier users cannot update membership');
     }
 
@@ -90,9 +108,10 @@ export class MembershipService {
     if (!user.membership) {
       return {
         username: user.username,
-        tier: Tier.Free,
+        tier: 'FREE',
         renewalDate: new Date(),
         autoRenew: false,
+        totalRevenue: 0,
       };
     }
     return {

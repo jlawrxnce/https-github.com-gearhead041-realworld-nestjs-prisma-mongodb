@@ -11,15 +11,17 @@ datasource db {
 }
 
 enum Tier {
-  Free
-  Gold
+  FREE
+  SILVER
+  GOLD
 }
 
 model Membership {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  tier Tier @default(Free)
+  tier Tier @default(FREE)
   renewalDate DateTime
   autoRenew Boolean @default(false)
+  totalRevenue Float @default(0)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique @db.ObjectId
 }
@@ -31,6 +33,7 @@ model User{
   bio String?
   image String?
   password String
+  hasPaywall Boolean @default(false)
   comments Comment[]
   articles Article[]
   followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])
@@ -51,12 +54,24 @@ model Article {
   updatedAt DateTime @updatedAt
   body String
   hasPaywall Boolean @default(false)
+  numViews Int @default(0)
+  views ArticleView[] @relation("articleViews")
   tagList String[] @default([])
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId String
   comments Comment[]
+}
+
+model ArticleView {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  article Article @relation("articleViews", fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String @db.ObjectId
+  viewer User @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  viewerId String @db.ObjectId
+  viewedAt DateTime @default(now())
+  revenueEarned Float @default(0)
 }
 
 model Comment {

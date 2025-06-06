@@ -20,6 +20,26 @@ import {
 
 @Injectable()
 export class ArticlesService {
+  async incrementViews(slug: string, viewerId: string, revenueEarned: number = 0) {
+    const article = await this.prisma.article.update({
+      where: { slug },
+      data: {
+        numViews: { increment: 1 },
+        views: {
+          create: {
+            viewerId,
+            revenueEarned,
+          },
+        },
+      },
+      include: {
+        author: true,
+        favouritedUsers: true,
+        views: true,
+      },
+    });
+    return castToArticle(article);
+  }
   private async checkPaywallAccess(articleId: string, user: User | null) {
     const article = await this.prisma.article.findUnique({
       where: { id: articleId },

@@ -1,11 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { MembershipData, MembershipResponse } from './dto/membership.dto';
 import { User } from '@prisma/client';
-import { MembershipDto, MembershipTier, MembershipUpdateDto } from './dto';
 export declare class MembershipService {
     private prisma;
     constructor(prisma: PrismaService);
-    activateMembership(user: User, tier: MembershipTier): Promise<MembershipDto>;
-    updateMembership(user: User, dto: MembershipUpdateDto): Promise<MembershipDto>;
-    getMembership(user: User): Promise<MembershipDto>;
-    checkGoldMembership(userId: string): Promise<boolean>;
+    createMembership(user: User, data: MembershipData): Promise<MembershipResponse>;
+    updateMembership(user: User, data: MembershipData): Promise<MembershipResponse>;
+    getMembership(username: string): Promise<MembershipResponse>;
+    hasGoldAccess(user: User | null): Promise<boolean>;
 }

@@ -14,12 +14,33 @@ import {
 import { User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
 import { JwtGuard } from '../common/guard';
-import { PaywallGuard } from './guard';
 import { ArticlesService } from './articles.service';
+import { MembershipService } from '../membership/membership.service';
+import { ForbiddenException } from '@nestjs/common';
 
 @Controller('articles')
 export class ArticlesController {
-  constructor(private articleService: ArticlesService) {}
+  @Put(':slug/paywall')
+  @UseGuards(JwtGuard)
+  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
+    const hasGoldAccess = await this.membershipService.hasGoldAccess(user);
+    if (!hasGoldAccess) {
+      throw new ForbiddenException(
+        'Only gold members can toggle article paywall',
+      );
+    }
+
+    const article = await this.articleService.findArticle(user, slug);
+    const updatedArticle = await this.articleService.updateArticle(user, slug, {
+      hasPaywall: !article.hasPaywall,
+    });
+    return { article: updatedArticle };
+  }
+
+  constructor(
+    private articleService: ArticlesService,
+    private membershipService: MembershipService,
+  ) {}
 
   @Get()
   @UseGuards(JwtGuard)
@@ -65,8 +86,8 @@ export class ArticlesController {
     };
   }
 
+  @UseGuards(JwtGuard)
   @Get(':slug')
-  @UseGuards(JwtGuard, PaywallGuard)
   @AllowAny()
   async getArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.findArticle(user, slug) };
@@ -99,12 +120,12 @@ export class ArticlesController {
     return this.articleService.deleteArticle(slug);
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Post(':slug/comments')
   async addCommentToArticle(
     @GetUser() user: User,
     @Param('slug') slug: string,
-    @Body() dto: any,
+    @Body() dto,
   ) {
     return {
       comment: await this.articleService.addCommentToArticle(
@@ -115,11 +136,16 @@ export class ArticlesController {
     };
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Get(':slug/comments')
   @AllowAny()
-  async getCommentsForArticle(@Param('slug') slug: string) {
-    return { comments: await this.articleService.getCommentsForArticle(slug) };
+  async getCommentsForArticle(
+    @Param('slug') slug: string,
+    @GetUser() user: User | null,
+  ) {
+    return {
+      comments: await this.articleService.getCommentsForArticle(slug, user),
+    };
   }
 
   @UseGuards(JwtGuard)
@@ -128,25 +154,17 @@ export class ArticlesController {
     return this.articleService.deleteCommentForArticle(slug, id);
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Post(':slug/favorite')
   async favoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return { article: await this.articleService.favouriteArticle(user, slug) };
   }
 
-  @UseGuards(JwtGuard, PaywallGuard)
+  @UseGuards(JwtGuard)
   @Delete(':slug/favorite')
   async unfavoriteArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return {
       article: await this.articleService.unfavouriteArticle(user, slug),
     };
-  }
-
-  // Add this new endpoint
-  @Put(':slug/paywall')
-  @UseGuards(JwtGuard)
-  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
-    const article = await this.articleService.togglePaywall(user, slug);
-    return { article };
   }
 }

@@ -10,6 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Tier {
+  Free
+  Gold
+}
+
+model Membership {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  tier Tier @default(Free)
+  renewalDate DateTime
+  autoRenew Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @db.ObjectId
+}
+
 model User{
   id String @id @default(auto())  @map("_id") @db.ObjectId
   email String @unique
@@ -36,8 +50,8 @@ model Article {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   body String
-  tagList String[] @default([])
   hasPaywall Boolean @default(false)
+  tagList String[] @default([])
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -54,14 +68,5 @@ model Comment {
   authorId String
   article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String
-}
-
-model Membership {
-  id String @id @default(auto())  @map("_id") @db.ObjectId
-  tier String @default("Free")
-  renewalDate DateTime @default(now())
-  autoRenew Boolean @default(false)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
 }
 

@@ -14,29 +14,28 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MembershipController = void 0;
 const common_1 = require("@nestjs/common");
-const membership_service_1 = require("./membership.service");
-const guard_1 = require("../common/guard");
 const decorator_1 = require("../common/decorator");
+const guard_1 = require("../common/guard");
+const membership_service_1 = require("./membership.service");
 let MembershipController = class MembershipController {
     constructor(membershipService) {
         this.membershipService = membershipService;
     }
-    async activateMembership(user, dto) {
-        const membership = await this.membershipService.activateMembership(user, dto.tier);
+    async activateMembership(user, membershipData) {
+        const membership = await this.membershipService.createMembership(user, membershipData);
         return { membership };
     }
-    async updateMembership(user, dto) {
-        const membership = await this.membershipService.updateMembership(user, dto);
+    async updateMembership(user, membershipData) {
+        const membership = await this.membershipService.updateMembership(user, membershipData);
         return { membership };
     }
     async getMembership(user) {
-        const membership = await this.membershipService.getMembership(user);
+        const membership = await this.membershipService.getMembership(user.username);
         return { membership };
     }
 };
 __decorate([
     (0, common_1.Post)(),
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Body)('membership')),
     __metadata("design:type", Function),
@@ -45,7 +44,6 @@ __decorate([
 ], MembershipController.prototype, "activateMembership", null);
 __decorate([
     (0, common_1.Put)(),
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Body)('membership')),
     __metadata("design:type", Function),
@@ -54,7 +52,6 @@ __decorate([
 ], MembershipController.prototype, "updateMembership", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
     __param(0, (0, decorator_1.GetUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -62,6 +59,7 @@ __decorate([
 ], MembershipController.prototype, "getMembership", null);
 MembershipController = __decorate([
     (0, common_1.Controller)('membership'),
+    (0, common_1.UseGuards)(guard_1.JwtGuard),
     __metadata("design:paramtypes", [membership_service_1.MembershipService])
 ], MembershipController);
 exports.MembershipController = MembershipController;

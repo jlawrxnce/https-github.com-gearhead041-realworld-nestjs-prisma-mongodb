@@ -6,12 +6,14 @@ export interface ArticleForCreateDto {
   description: string;
   body: string;
   tagList?: string[];
+  hasPaywall?: boolean;
 }
 
 export interface ArticleForUpdateDto {
   title?: string;
   description?: string;
   body?: string;
+  hasPaywall?: boolean;
 }
 
 export interface ArticleDto {
@@ -23,9 +25,9 @@ export interface ArticleDto {
   favoritesCount: number;
   author: ProfileDto;
   favorited: boolean;
-  hasPaywall: boolean;
   createdAt: Date;
   updatedAt: Date;
+  hasPaywall: boolean;
 }
 
 export function castToArticle(

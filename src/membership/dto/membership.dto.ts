@@ -1,34 +1,17 @@
-import { Membership } from '@prisma/client';
+import { Tier } from '@prisma/client';
 
-export enum MembershipTier {
-  Free = 'Free',
-  Gold = 'Gold',
-}
-
-export interface MembershipDto {
+export interface MembershipResponse {
   username: string;
-  tier: MembershipTier;
+  tier: Tier;
   renewalDate: Date;
   autoRenew: boolean;
 }
 
-export interface MembershipActivateDto {
-  tier: MembershipTier;
+export interface MembershipData {
+  tier: Tier;
+  autoRenew?: boolean;
 }
 
-export interface MembershipUpdateDto {
-  tier: MembershipTier;
-  autoRenew: boolean;
-}
-
-export function castToMembershipDto(
-  membership: Membership,
-  username: string,
-): MembershipDto {
-  return {
-    username,
-    tier: membership.tier as MembershipTier,
-    renewalDate: membership.renewalDate,
-    autoRenew: membership.autoRenew,
-  };
+export interface MembershipRO {
+  membership: MembershipResponse;
 }

@@ -33,6 +33,7 @@ export class ProfilesService {
     });
 
     const profile: ProfileDto = castToProfile(userFollowed, true);
+    console.log('profile', profile);
     return profile;
   }
 

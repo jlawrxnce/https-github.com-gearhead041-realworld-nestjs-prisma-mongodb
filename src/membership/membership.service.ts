@@ -1,136 +1,86 @@
 import {
   ForbiddenException,
   Injectable,
-  NotFoundException,
+  BadRequestException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MembershipData, MembershipResponse } from './dto/membership.dto';
-import { User, Tier } from '@prisma/client';
-
+import {
+  MembershipDto,
+  MembershipUpdateDto,
+  MembershipActivateDto,
+} from './dto/membership.dto';
+import { MembershipTier, User } from '@prisma/client';
 
 @Injectable()
 export class MembershipService {
-  async addRevenue(username: string, amount: number): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-      include: { membership: true },
-    });
-
-    if (!user || !user.membership) {
-      throw new NotFoundException('User membership not found');
-    }
-
-    await this.prisma.membership.update({
-      where: { userId: user.id },
-      data: {
-        totalRevenue: { increment: amount },
-      },
-    });
-  }
   constructor(private prisma: PrismaService) {}
 
-  async createMembership(
+  async activateMembership(
     user: User,
-    data: MembershipData,
-  ): Promise<MembershipResponse> {
-    if (data.tier === 'Free') {
-      throw new ForbiddenException('Cannot activate Free tier membership');
+    dto: MembershipActivateDto,
+  ): Promise<MembershipDto> {
+    if (dto.tier === MembershipTier.Free) {
+      throw new UnprocessableEntityException('Cannot activate Free tier');
     }
 
-    const renewalDate = new Date(
-      new Date().setMonth(new Date().getMonth() + 1),
-    );
-    const membership = await this.prisma.membership.create({
+    const renewalDate = new Date();
+    renewalDate.setMonth(renewalDate.getMonth() + 1);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
       data: {
-        tier: data.tier,
-        autoRenew: data.autoRenew ?? false,
-        renewalDate: renewalDate,
-        userId: user.id,
-      },
-      include: {
-        user: true,
+        membershipTier: dto.tier,
+        membershipRenewalDate: renewalDate,
       },
     });
+
     return {
-      username: membership.user.username,
-      tier: membership.tier,
-      renewalDate: membership.renewalDate,
-      autoRenew: membership.autoRenew,
-      totalRevenue: membership.totalRevenue || 0,
+      username: updatedUser.username,
+      tier: updatedUser.membershipTier,
+      renewalDate: updatedUser.membershipRenewalDate,
+      autoRenew: updatedUser.membershipAutoRenew,
     };
   }
 
   async updateMembership(
     user: User,
-    data: MembershipData,
-  ): Promise<MembershipResponse> {
-    const membership = await this.prisma.membership.findUnique({
-      where: { userId: user.id },
-      include: { user: true },
+    dto: MembershipUpdateDto,
+  ): Promise<MembershipDto> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
     });
 
-    if (!membership) {
+    if (currentUser.membershipTier === MembershipTier.Free) {
       throw new ForbiddenException('Free tier users cannot update membership');
     }
 
-    if (membership.tier === 'Free') {
-      throw new ForbiddenException('Free tier users cannot update membership');
-    }
-
-    const updatedMembership = await this.prisma.membership.update({
-      where: { userId: user.id },
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
       data: {
-        tier: data.tier,
-        autoRenew:
-          data.autoRenew !== undefined ? data.autoRenew : membership.autoRenew,
+        membershipTier: dto.tier,
+        membershipAutoRenew: dto.autoRenew,
       },
-      include: { user: true },
     });
 
     return {
-      username: updatedMembership.user.username,
-      tier: updatedMembership.tier as Tier,
-      renewalDate: updatedMembership.renewalDate,
-      autoRenew: updatedMembership.autoRenew,
-      totalRevenue: updatedMembership.totalRevenue,
+      username: updatedUser.username,
+      tier: updatedUser.membershipTier,
+      renewalDate: updatedUser.membershipRenewalDate,
+      autoRenew: updatedUser.membershipAutoRenew,
     };
   }
 
-  async getMembership(username: string): Promise<MembershipResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-      include: { membership: true },
+  async getMembership(user: User): Promise<MembershipDto> {
+    const userWithMembership = await this.prisma.user.findUnique({
+      where: { id: user.id },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (!user.membership) {
-      return {
-        username: user.username,
-        tier: 'Free',
-        renewalDate: new Date(),
-        autoRenew: false,
-        totalRevenue: 0,
-      };
-    }
     return {
-      username: user.username,
-      tier: user.membership.tier as Tier,
-      renewalDate: user.membership.renewalDate,
-      autoRenew: user.membership.autoRenew,
-      totalRevenue: user.membership.totalRevenue,
+      username: userWithMembership.username,
+      tier: userWithMembership.membershipTier,
+      renewalDate: userWithMembership.membershipRenewalDate,
+      autoRenew: userWithMembership.membershipAutoRenew,
     };
-  }
-
-  async hasMembershipAccess(user: User | null): Promise<boolean> {
-    if (!user) return false;
-
-    const membership = await this.prisma.membership.findUnique({
-      where: { userId: user.id },
-    });
-
-    return membership?.tier === Tier.Gold || membership?.tier === Tier.Silver;
   }
 }

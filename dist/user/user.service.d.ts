@@ -11,7 +11,9 @@ export declare class UserService {
         bio: string;
         image: string;
         password: string;
-        hasPaywall: boolean;
+        membershipTier: import(".prisma/client").MembershipTier;
+        membershipRenewalDate: Date;
+        membershipAutoRenew: boolean;
         followersIds: string[];
         followingIds: string[];
         articlesLikedIds: string[];

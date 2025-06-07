@@ -1,14 +1,14 @@
-export interface MembershipResponse {
+import { MembershipTier } from '@prisma/client';
+export interface MembershipDto {
     username: string;
-    tier: 'Free' | 'Silver' | 'Gold';
+    tier: MembershipTier;
     renewalDate: Date;
     autoRenew: boolean;
-    totalRevenue: number;
 }
-export interface MembershipData {
-    tier: 'Free' | 'Silver' | 'Gold';
-    autoRenew?: boolean;
+export interface MembershipUpdateDto {
+    tier: MembershipTier;
+    autoRenew: boolean;
 }
-export interface MembershipRO {
-    membership: MembershipResponse;
+export interface MembershipActivateDto {
+    tier: MembershipTier;
 }

@@ -20,50 +20,33 @@ let ArticlesService = class ArticlesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async incrementViews(slug, user, revenueEarned = 0) {
-        const article = await this.prisma.article.update({
-            where: { slug },
-            data: {
-                numViews: { increment: 1 },
-                views: {
-                    create: {
-                        viewerId: (user === null || user === void 0 ? void 0 : user.id) || '',
-                        revenueEarned,
-                    },
-                },
-            },
-            include: {
-                author: true,
-                favouritedUsers: true,
-                views: true,
-            },
+    async togglePaywall(user, slug) {
+        var _a, _b;
+        const userWithMembership = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { membershipTier: true },
         });
-        return this.findArticle(user, slug);
-    }
-    async checkPaywallAccess(articleId, user) {
+        if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) !== client_1.MembershipTier.Gold) {
+            throw new common_1.ForbiddenException('Only Gold members can toggle paywalls');
+        }
         const article = await this.prisma.article.findUnique({
-            where: { id: articleId },
-            include: {
-                author: {
-                    include: { membership: true },
-                },
-            },
+            where: { slug },
+            include: { author: true },
         });
         if (!article) {
             throw new common_1.NotFoundException('Article not found');
         }
-        if (!article.hasPaywall) {
-            return;
+        if (article.authorId !== user.id) {
+            throw new common_1.ForbiddenException('Only the article author can toggle its paywall');
         }
-        if (!user) {
-            throw new common_1.ForbiddenException('This article is behind a paywall');
-        }
-        const userMembership = await this.prisma.membership.findUnique({
-            where: { userId: user.id },
+        const updatedArticle = await this.prisma.article.update({
+            where: { slug },
+            data: { hasPaywall: !article.hasPaywall },
+            include: { author: true },
         });
-        if (!userMembership || userMembership.tier === client_1.Tier.Free) {
-            throw new common_1.ForbiddenException('This article requires a membership');
-        }
+        const following = ((_b = (_a = updatedArticle.author) === null || _a === void 0 ? void 0 : _a.followersIds) === null || _b === void 0 ? void 0 : _b.includes(user === null || user === void 0 ? void 0 : user.id)) || false;
+        const authorProfile = (0, dto_1.castToProfile)(updatedArticle.author, following);
+        return (0, dto_2.castToArticle)(updatedArticle, user, updatedArticle.tagList, authorProfile);
     }
     async findArticles(user, tag, author, favorited, limit = 10, offset = 0) {
         let articles = await this.prisma.article.findMany({
@@ -122,7 +105,6 @@ let ArticlesService = class ArticlesService {
         });
         if (article === null)
             throw new common_1.NotFoundException('article not found');
-        await this.checkPaywallAccess(article.id, user);
         const following = ((_b = (_a = article.author) === null || _a === void 0 ? void 0 : _a.followersIds) === null || _b === void 0 ? void 0 : _b.includes(user === null || user === void 0 ? void 0 : user.id)) || false;
         const authorProfile = (0, dto_1.castToProfile)(article.author, following);
         return (0, dto_2.castToArticle)(article, user, article.tagList, authorProfile);
@@ -149,26 +131,19 @@ let ArticlesService = class ArticlesService {
         });
         return articlesDto;
     }
-    async createArticle(user, dto) {
-        const userMembership = await this.prisma.membership.findUnique({
-            where: { userId: user.id },
-        });
-        if (dto.hasPaywall &&
-            (!userMembership || userMembership.tier !== client_1.Tier.Gold)) {
-            throw new common_1.ForbiddenException('Only Gold tier members can create paywalled articles');
-        }
-        const slug = dto.title.split(' ').join('-');
+    async createArticle(user, articletoCreate) {
+        const slug = articletoCreate.title.split(' ').join('-');
         try {
             const article = await this.prisma.article.create({
-                data: Object.assign(Object.assign({}, dto), { authorId: user.id, slug: slug, favouritedUserIds: user.id, tagList: {
-                        set: dto.tagList,
+                data: Object.assign(Object.assign({}, articletoCreate), { authorId: user.id, slug: slug, favouritedUserIds: user.id, tagList: {
+                        set: articletoCreate.tagList,
                     } }),
             });
             return (0, dto_2.castToArticle)(article, user, article.tagList, (0, dto_1.castToProfile)(user, false));
         }
         catch (error) {
             if (error instanceof runtime_1.PrismaClientValidationError) {
-                throw new common_1.ForbiddenException('article already exists');
+                throw new common_1.BadRequestException('bad request');
             }
         }
     }
@@ -212,7 +187,6 @@ let ArticlesService = class ArticlesService {
         });
         if (!article)
             throw new common_1.NotFoundException('article not found');
-        await this.checkPaywallAccess(article.id, user);
         const comment = await this.prisma.comment.create({
             data: {
                 articleId: article.id,
@@ -222,13 +196,12 @@ let ArticlesService = class ArticlesService {
         });
         return (0, dto_2.castToCommentDto)(comment, (0, dto_1.castToProfile)(user, false));
     }
-    async getCommentsForArticle(slug, user) {
+    async getCommentsForArticle(slug) {
         const article = await this.prisma.article.findUnique({
             where: {
                 slug: slug,
             },
             select: {
-                id: true,
                 comments: {
                     include: {
                         author: true,
@@ -238,7 +211,6 @@ let ArticlesService = class ArticlesService {
         });
         if (article === null)
             throw new common_1.NotFoundException('article not found');
-        await this.checkPaywallAccess(article.id, user);
         return article.comments.map((comment) => {
             return (0, dto_2.castToCommentDto)(comment, (0, dto_1.castToProfile)(comment.author, false));
         });
@@ -274,7 +246,6 @@ let ArticlesService = class ArticlesService {
         });
         if (!article)
             throw new common_1.NotFoundException('article not found');
-        await this.checkPaywallAccess(article.id, user);
         if (!article.favouritedUserIds.includes(user.id)) {
             article = await this.prisma.article.update({
                 where: {
@@ -300,7 +271,6 @@ let ArticlesService = class ArticlesService {
         });
         if (!article)
             throw new common_1.NotFoundException('article not found');
-        await this.checkPaywallAccess(article.id, user);
         article.favouritedUserIds = article.favouritedUserIds.filter((id) => id !== user.id);
         delete article.id;
         const articleUpdated = await this.prisma.article.update({

@@ -13,7 +13,9 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
-            hasPaywall: boolean;
+            membershipTier: import(".prisma/client").MembershipTier;
+            membershipRenewalDate: Date;
+            membershipAutoRenew: boolean;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
@@ -28,7 +30,9 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
-            hasPaywall: boolean;
+            membershipTier: import(".prisma/client").MembershipTier;
+            membershipRenewalDate: Date;
+            membershipAutoRenew: boolean;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];

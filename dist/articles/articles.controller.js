@@ -14,46 +14,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArticlesController = void 0;
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const decorator_1 = require("../common/decorator");
 const guard_1 = require("../common/guard");
 const articles_service_1 = require("./articles.service");
-const membership_service_1 = require("../membership/membership.service");
-const common_2 = require("@nestjs/common");
 let ArticlesController = class ArticlesController {
-    constructor(articleService, membershipService) {
+    constructor(articleService) {
         this.articleService = articleService;
-        this.membershipService = membershipService;
-    }
-    async viewArticle(user, slug) {
-        const article = await this.articleService.findArticle(user, slug);
-        if (article.hasPaywall) {
-            const membership = await this.membershipService.getMembership(user.username);
-            if (!membership || membership.tier === 'Free') {
-                return { article: {} };
-            }
-        }
-        let revenueEarned = 0;
-        if (article.hasPaywall) {
-            const authorMembership = await this.membershipService.getMembership(article.author.username);
-            if (authorMembership) {
-                revenueEarned = authorMembership.tier === client_1.Tier.Gold ? 0.25 : 0.1;
-                await this.membershipService.addRevenue(article.author.username, revenueEarned);
-            }
-        }
-        const updatedArticle = await this.articleService.incrementViews(slug, user, revenueEarned);
-        return { article: updatedArticle };
     }
     async togglePaywall(user, slug) {
-        const hasMembershipAccess = await this.membershipService.hasMembershipAccess(user);
-        if (!hasMembershipAccess) {
-            throw new common_2.ForbiddenException('Only gold members can toggle article paywall');
-        }
-        const article = await this.articleService.findArticle(user, slug);
-        const updatedArticle = await this.articleService.updateArticle(user, slug, {
-            hasPaywall: !article.hasPaywall,
-        });
-        return { article: updatedArticle };
+        return {
+            article: await this.articleService.togglePaywall(user, slug),
+        };
     }
     async getAllArticles(user, tag, author, favorited, limit = 10, offset = 0) {
         const articles = await this.articleService.findArticles(user, tag, author, favorited, limit, offset);
@@ -90,10 +61,8 @@ let ArticlesController = class ArticlesController {
             comment: await this.articleService.addCommentToArticle(user, slug, dto.comment),
         };
     }
-    async getCommentsForArticle(slug, user) {
-        return {
-            comments: await this.articleService.getCommentsForArticle(slug, user),
-        };
+    async getCommentsForArticle(slug) {
+        return { comments: await this.articleService.getCommentsForArticle(slug) };
     }
     deleteComment(slug, id) {
         return this.articleService.deleteCommentForArticle(slug, id);
@@ -108,17 +77,8 @@ let ArticlesController = class ArticlesController {
     }
 };
 __decorate([
-    (0, common_1.Put)(':slug/view'),
     (0, common_1.UseGuards)(guard_1.JwtGuard),
-    __param(0, (0, decorator_1.GetUser)()),
-    __param(1, (0, common_1.Param)('slug')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], ArticlesController.prototype, "viewArticle", null);
-__decorate([
     (0, common_1.Put)(':slug/paywall'),
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('slug')),
     __metadata("design:type", Function),
@@ -150,8 +110,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ArticlesController.prototype, "getUserFeed", null);
 __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
     (0, common_1.Get)(':slug'),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, decorator_1.AllowAny)(),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('slug')),
@@ -188,7 +148,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ArticlesController.prototype, "deleteArticle", null);
 __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, common_1.Post)(':slug/comments'),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('slug')),
@@ -198,13 +158,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ArticlesController.prototype, "addCommentToArticle", null);
 __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, common_1.Get)(':slug/comments'),
     (0, decorator_1.AllowAny)(),
     __param(0, (0, common_1.Param)('slug')),
-    __param(1, (0, decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ArticlesController.prototype, "getCommentsForArticle", null);
 __decorate([
@@ -217,7 +176,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ArticlesController.prototype, "deleteComment", null);
 __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, common_1.Post)(':slug/favorite'),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('slug')),
@@ -226,7 +185,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ArticlesController.prototype, "favoriteArticle", null);
 __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, common_1.Delete)(':slug/favorite'),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('slug')),
@@ -236,8 +195,7 @@ __decorate([
 ], ArticlesController.prototype, "unfavoriteArticle", null);
 ArticlesController = __decorate([
     (0, common_1.Controller)('articles'),
-    __metadata("design:paramtypes", [articles_service_1.ArticlesService,
-        membership_service_1.MembershipService])
+    __metadata("design:paramtypes", [articles_service_1.ArticlesService])
 ], ArticlesController);
 exports.ArticlesController = ArticlesController;
 //# sourceMappingURL=articles.controller.js.map

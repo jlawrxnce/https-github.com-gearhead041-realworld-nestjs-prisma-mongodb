@@ -3,7 +3,7 @@ import { ProfilesService } from './profiles.service';
 export declare class ProfilesController {
     private profileService;
     constructor(profileService: ProfilesService);
-    findUser(user: User, userName: string): Promise<{
+    findUser(user: User | null, userName: string): Promise<{
         profile: import("./dto").ProfileDto;
     }>;
     followUser(user: User, userName: string): Promise<{

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ArticleForCreateDto, ArticleForUpdateDto, CommentForCreateDto } from './dto';
 export declare class ArticlesService {
     private prisma;
+    incrementViews(slug: string, user: User | null, revenueEarned?: number): Promise<import("./dto").ArticleDto>;
     private checkPaywallAccess;
     constructor(prisma: PrismaService);
     findArticles(user: User | null, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<import("./dto").ArticleDto[]>;

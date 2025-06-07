@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Tier, User } from '@prisma/client';
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -20,14 +20,14 @@ import {
 
 @Injectable()
 export class ArticlesService {
-  async incrementViews(slug: string, viewerId: string, revenueEarned: number = 0) {
+  async incrementViews(slug: string, user: User | null, revenueEarned = 0) {
     const article = await this.prisma.article.update({
       where: { slug },
       data: {
         numViews: { increment: 1 },
         views: {
           create: {
-            viewerId,
+            viewerId: user?.id || '',
             revenueEarned,
           },
         },
@@ -38,7 +38,7 @@ export class ArticlesService {
         views: true,
       },
     });
-    return castToArticle(article);
+    return this.findArticle(user, slug);
   }
   private async checkPaywallAccess(articleId: string, user: User | null) {
     const article = await this.prisma.article.findUnique({
@@ -66,8 +66,8 @@ export class ArticlesService {
       where: { userId: user.id },
     });
 
-    if (!userMembership || userMembership.tier !== 'Gold') {
-      throw new ForbiddenException('This article requires a Gold membership');
+    if (!userMembership || userMembership.tier === Tier.Free) {
+      throw new ForbiddenException('This article requires a membership');
     }
   }
 
@@ -179,7 +179,10 @@ export class ArticlesService {
       where: { userId: user.id },
     });
 
-    if (dto.hasPaywall && (!userMembership || userMembership.tier !== 'Gold')) {
+    if (
+      dto.hasPaywall &&
+      (!userMembership || userMembership.tier !== Tier.Gold)
+    ) {
       throw new ForbiddenException(
         'Only Gold tier members can create paywalled articles',
       );

@@ -23,6 +23,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     );
     if (user) return user;
     if (allowAny) return null;
+    console.log('Unauthorized', user);
     throw new UnauthorizedException();
   }
 }

@@ -17,9 +17,24 @@ let MembershipService = class MembershipService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async addRevenue(username, amount) {
+        const user = await this.prisma.user.findUnique({
+            where: { username },
+            include: { membership: true },
+        });
+        if (!user || !user.membership) {
+            throw new common_1.NotFoundException('User membership not found');
+        }
+        await this.prisma.membership.update({
+            where: { userId: user.id },
+            data: {
+                totalRevenue: { increment: amount },
+            },
+        });
+    }
     async createMembership(user, data) {
         var _a;
-        if (data.tier === client_1.Tier.Free) {
+        if (data.tier === 'Free') {
             throw new common_1.ForbiddenException('Cannot activate Free tier membership');
         }
         const renewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
@@ -39,6 +54,7 @@ let MembershipService = class MembershipService {
             tier: membership.tier,
             renewalDate: membership.renewalDate,
             autoRenew: membership.autoRenew,
+            totalRevenue: membership.totalRevenue || 0,
         };
     }
     async updateMembership(user, data) {
@@ -49,7 +65,7 @@ let MembershipService = class MembershipService {
         if (!membership) {
             throw new common_1.ForbiddenException('Free tier users cannot update membership');
         }
-        if (membership.tier === client_1.Tier.Free) {
+        if (membership.tier === 'Free') {
             throw new common_1.ForbiddenException('Free tier users cannot update membership');
         }
         const updatedMembership = await this.prisma.membership.update({
@@ -65,6 +81,7 @@ let MembershipService = class MembershipService {
             tier: updatedMembership.tier,
             renewalDate: updatedMembership.renewalDate,
             autoRenew: updatedMembership.autoRenew,
+            totalRevenue: updatedMembership.totalRevenue,
         };
     }
     async getMembership(username) {
@@ -78,9 +95,10 @@ let MembershipService = class MembershipService {
         if (!user.membership) {
             return {
                 username: user.username,
-                tier: client_1.Tier.Free,
+                tier: 'Free',
                 renewalDate: new Date(),
                 autoRenew: false,
+                totalRevenue: 0,
             };
         }
         return {
@@ -88,15 +106,16 @@ let MembershipService = class MembershipService {
             tier: user.membership.tier,
             renewalDate: user.membership.renewalDate,
             autoRenew: user.membership.autoRenew,
+            totalRevenue: user.membership.totalRevenue,
         };
     }
-    async hasGoldAccess(user) {
+    async hasMembershipAccess(user) {
         if (!user)
             return false;
         const membership = await this.prisma.membership.findUnique({
             where: { userId: user.id },
         });
-        return (membership === null || membership === void 0 ? void 0 : membership.tier) === client_1.Tier.Gold;
+        return (membership === null || membership === void 0 ? void 0 : membership.tier) === client_1.Tier.Gold || (membership === null || membership === void 0 ? void 0 : membership.tier) === client_1.Tier.Silver;
     }
 };
 MembershipService = __decorate([

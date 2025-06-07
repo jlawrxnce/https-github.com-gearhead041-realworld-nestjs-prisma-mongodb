@@ -5,6 +5,7 @@ export interface ProfileDto {
   bio: string;
   image: string;
   following: boolean;
+  hasPaywall: boolean;
 }
 
 export function castToProfile(user: User, isFollowing: boolean): ProfileDto {
@@ -13,5 +14,6 @@ export function castToProfile(user: User, isFollowing: boolean): ProfileDto {
     bio: user.bio,
     image: user.image,
     following: isFollowing,
+    hasPaywall: user.hasPaywall,
   };
 }

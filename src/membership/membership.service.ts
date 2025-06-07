@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MembershipData, MembershipResponse } from './dto/membership.dto';
-import { User } from '@prisma/client';
+import { User, Tier } from '@prisma/client';
+
 
 @Injectable()
 export class MembershipService {
@@ -32,7 +33,7 @@ export class MembershipService {
     user: User,
     data: MembershipData,
   ): Promise<MembershipResponse> {
-    if (data.tier === 'FREE') {
+    if (data.tier === 'Free') {
       throw new ForbiddenException('Cannot activate Free tier membership');
     }
 
@@ -50,7 +51,6 @@ export class MembershipService {
         user: true,
       },
     });
-
     return {
       username: membership.user.username,
       tier: membership.tier,
@@ -73,7 +73,7 @@ export class MembershipService {
       throw new ForbiddenException('Free tier users cannot update membership');
     }
 
-    if (membership.tier === 'FREE') {
+    if (membership.tier === 'Free') {
       throw new ForbiddenException('Free tier users cannot update membership');
     }
 
@@ -89,9 +89,10 @@ export class MembershipService {
 
     return {
       username: updatedMembership.user.username,
-      tier: updatedMembership.tier,
+      tier: updatedMembership.tier as Tier,
       renewalDate: updatedMembership.renewalDate,
       autoRenew: updatedMembership.autoRenew,
+      totalRevenue: updatedMembership.totalRevenue,
     };
   }
 
@@ -108,7 +109,7 @@ export class MembershipService {
     if (!user.membership) {
       return {
         username: user.username,
-        tier: 'FREE',
+        tier: 'Free',
         renewalDate: new Date(),
         autoRenew: false,
         totalRevenue: 0,
@@ -116,19 +117,20 @@ export class MembershipService {
     }
     return {
       username: user.username,
-      tier: user.membership.tier,
+      tier: user.membership.tier as Tier,
       renewalDate: user.membership.renewalDate,
       autoRenew: user.membership.autoRenew,
+      totalRevenue: user.membership.totalRevenue,
     };
   }
 
-  async hasGoldAccess(user: User | null): Promise<boolean> {
+  async hasMembershipAccess(user: User | null): Promise<boolean> {
     if (!user) return false;
 
     const membership = await this.prisma.membership.findUnique({
       where: { userId: user.id },
     });
 
-    return membership?.tier === Tier.Gold;
+    return membership?.tier === Tier.Gold || membership?.tier === Tier.Silver;
   }
 }

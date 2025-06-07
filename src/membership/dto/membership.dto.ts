@@ -1,13 +1,13 @@
 export interface MembershipResponse {
   username: string;
-  tier: 'FREE' | 'SILVER' | 'GOLD';
+  tier: 'Free' | 'Silver' | 'Gold';
   renewalDate: Date;
   autoRenew: boolean;
   totalRevenue: number;
 }
 
 export interface MembershipData {
-  tier: 'FREE' | 'SILVER' | 'GOLD';
+  tier: 'Free' | 'Silver' | 'Gold';
   autoRenew?: boolean;
 }
 

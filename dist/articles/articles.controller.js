@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArticlesController = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const decorator_1 = require("../common/decorator");
 const guard_1 = require("../common/guard");
 const articles_service_1 = require("./articles.service");
@@ -24,9 +25,28 @@ let ArticlesController = class ArticlesController {
         this.articleService = articleService;
         this.membershipService = membershipService;
     }
+    async viewArticle(user, slug) {
+        const article = await this.articleService.findArticle(user, slug);
+        if (article.hasPaywall) {
+            const membership = await this.membershipService.getMembership(user.username);
+            if (!membership || membership.tier === 'Free') {
+                return { article: {} };
+            }
+        }
+        let revenueEarned = 0;
+        if (article.hasPaywall) {
+            const authorMembership = await this.membershipService.getMembership(article.author.username);
+            if (authorMembership) {
+                revenueEarned = authorMembership.tier === client_1.Tier.Gold ? 0.25 : 0.1;
+                await this.membershipService.addRevenue(article.author.username, revenueEarned);
+            }
+        }
+        const updatedArticle = await this.articleService.incrementViews(slug, user, revenueEarned);
+        return { article: updatedArticle };
+    }
     async togglePaywall(user, slug) {
-        const hasGoldAccess = await this.membershipService.hasGoldAccess(user);
-        if (!hasGoldAccess) {
+        const hasMembershipAccess = await this.membershipService.hasMembershipAccess(user);
+        if (!hasMembershipAccess) {
             throw new common_2.ForbiddenException('Only gold members can toggle article paywall');
         }
         const article = await this.articleService.findArticle(user, slug);
@@ -87,6 +107,15 @@ let ArticlesController = class ArticlesController {
         };
     }
 };
+__decorate([
+    (0, common_1.Put)(':slug/view'),
+    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    __param(0, (0, decorator_1.GetUser)()),
+    __param(1, (0, common_1.Param)('slug')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ArticlesController.prototype, "viewArticle", null);
 __decorate([
     (0, common_1.Put)(':slug/paywall'),
     (0, common_1.UseGuards)(guard_1.JwtGuard),

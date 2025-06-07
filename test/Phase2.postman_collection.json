@@ -628,7 +628,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Gold Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Gold members only\");",
@@ -670,7 +670,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"article\": {\n    \"body\": \"This is a paywalled article. Only gold members can access it.\",\n    \"description\": \"Gold members only\",\n    \"title\": \"Paywalled Article\",\n    \"tagList\": [\n      \"Gold\",\n      \"Paywall\"\n    ]\n  }\n}",
+							"raw": "{\n  \"article\": {\n    \"body\": \"This is a paywalled article. Only gold members can access it.\",\n    \"description\": \"Gold members only\",\n    \"title\": \"Gold Article\",\n    \"tagList\": [\n      \"Gold\",\n      \"Paywall\"\n    ]\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -711,7 +711,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Silver Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Silver members only\");",
@@ -753,7 +753,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"article\": {\n    \"body\": \"This is a paywalled article. Only silver members can access it.\",\n    \"description\": \"Silver members only\",\n    \"title\": \"Paywalled Article\",\n    \"tagList\": [\n      \"Silver\",\n      \"Paywall\"\n    ]\n  }\n}",
+							"raw": "{\n  \"article\": {\n    \"body\": \"This is a paywalled article. Only silver members can access it.\",\n    \"description\": \"Silver members only\",\n    \"title\": \"Silver Article\",\n    \"tagList\": [\n      \"Silver\",\n      \"Paywall\"\n    ]\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -876,7 +876,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Gold Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Gold members only\");",
@@ -925,6 +925,84 @@
 								{
 									"key": "slug",
 									"value": "{{gold_slug}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Views",
+			"item": [
+				{
+					"name": "Free views Silver no paywall",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+									"});",
+									"",
+									"var responseJSON = JSON.parse(pm.response.text());",
+									"",
+									"tests['Response contains \\\"article\\\" property'] = responseJSON.hasOwnProperty('article');",
+									"",
+									"var article = responseJSON.article",
+									"tests['Article has \\\"slug\\\" property'] = article.hasOwnProperty('slug');",
+									"pm.globals.set(\"silver_slug\", article.slug)",
+									"",
+									"",
+									"pm.test('article title expected', () => {",
+									"    pm.expect(article.title).to.equal(\"Silver Article\");",
+									"});",
+									"pm.test('article description expected', () => {",
+									"    pm.expect(article.description).to.equal(\"Silver members only\");",
+									"});",
+									"pm.test('article tagList expected', () => {",
+									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set([",
+									"        \"Silver\",",
+									"        \"Paywall\"",
+									"    ]));",
+									"",
+									"});",
+									"pm.test('article paywall expected', () => {",
+									"   pm.expect(article.hasPaywall).to.equal(false);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{free_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{APIURL}}/articles/:slug/view",
+							"host": [
+								"{{APIURL}}"
+							],
+							"path": [
+								"articles",
+								":slug",
+								"view"
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "{{silver_slug}}"
 								}
 							]
 						}
@@ -962,7 +1040,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Silver Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Silver members only\");",
@@ -1016,12 +1094,7 @@
 						}
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "Views",
-			"item": [
+				},
 				{
 					"name": "Silver views Free",
 					"event": [
@@ -1033,28 +1106,30 @@
 									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
 									"});",
 									"",
-									"var requestJSON = JSON.parse(pm.request.body);",
 									"var responseJSON = JSON.parse(pm.response.text());",
+									"",
 									"tests['Response contains \\\"article\\\" property'] = responseJSON.hasOwnProperty('article');",
 									"",
 									"var article = responseJSON.article",
 									"tests['Article has \\\"slug\\\" property'] = article.hasOwnProperty('slug');",
-									"pm.globals.set(\"free_slug\", article.slug)",
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(requestJSON.article.title);",
+									"    pm.expect(article.title).to.equal(\"Free Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
-									"    pm.expect(article.description).to.equal(requestJSON.article.description);",
+									"    pm.expect(article.description).to.equal(\"Free for all\");",
 									"});",
 									"pm.test('article tagList expected', () => {",
-									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set(requestJSON.article.tagList));",
+									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set([",
+									"        \"Free\"",
+									"    ]));",
 									"",
 									"});",
 									"pm.test('article paywall expected', () => {",
 									"   pm.expect(article.hasPaywall).to.equal(false);",
 									"});",
+									"",
 									""
 								],
 								"type": "text/javascript",
@@ -1072,13 +1147,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{APIURL}}/view/:slug",
+							"raw": "{{APIURL}}/articles/:slug/view",
 							"host": [
 								"{{APIURL}}"
 							],
 							"path": [
-								"view",
-								":slug"
+								"articles",
+								":slug",
+								"view"
 							],
 							"variable": [
 								{
@@ -1102,7 +1178,6 @@
 									"});",
 									"",
 									"var responseJSON = JSON.parse(pm.response.text());",
-									"var requestJSON = JSON.parse(pm.request.body);",
 									"",
 									"tests['Response contains \\\"article\\\" property'] = responseJSON.hasOwnProperty('article');",
 									"",
@@ -1112,7 +1187,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Silver Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Silver members only\");",
@@ -1121,9 +1196,14 @@
 									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set([",
 									"        \"Silver\",",
 									"        \"Paywall\"",
-									"    ]))});",
+									"    ]));",
+									"",
+									"});",
 									"pm.test('article paywall expected', () => {",
-									"   pm.expect(article.hasPaywall).to.equal(false);});"
+									"   pm.expect(article.hasPaywall).to.equal(true);",
+									"});",
+									"",
+									""
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1140,13 +1220,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{APIURL}}/view/:slug",
+							"raw": "{{APIURL}}/articles/:slug/view",
 							"host": [
 								"{{APIURL}}"
 							],
 							"path": [
-								"view",
-								":slug"
+								"articles",
+								":slug",
+								"view"
 							],
 							"variable": [
 								{
@@ -1170,7 +1251,6 @@
 									"});",
 									"",
 									"var responseJSON = JSON.parse(pm.response.text());",
-									"var requestJSON = JSON.parse(pm.request.body);",
 									"",
 									"tests['Response contains \\\"article\\\" property'] = responseJSON.hasOwnProperty('article');",
 									"",
@@ -1180,7 +1260,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Gold Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Gold members only\");",
@@ -1189,9 +1269,14 @@
 									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set([",
 									"        \"Gold\",",
 									"        \"Paywall\"",
-									"    ]))});",
+									"    ]));",
+									"",
+									"});",
 									"pm.test('article paywall expected', () => {",
-									"   pm.expect(article.hasPaywall).to.equal(false);});"
+									"   pm.expect(article.hasPaywall).to.equal(true);",
+									"});",
+									"",
+									""
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1208,13 +1293,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{APIURL}}/view/:slug",
+							"raw": "{{APIURL}}/articles/:slug/view",
 							"host": [
 								"{{APIURL}}"
 							],
 							"path": [
-								"view",
-								":slug"
+								"articles",
+								":slug",
+								"view"
 							],
 							"variable": [
 								{
@@ -1238,7 +1324,6 @@
 									"});",
 									"",
 									"var responseJSON = JSON.parse(pm.response.text());",
-									"var requestJSON = JSON.parse(pm.request.body);",
 									"",
 									"tests['Response contains \\\"article\\\" property'] = responseJSON.hasOwnProperty('article');",
 									"",
@@ -1248,7 +1333,7 @@
 									"",
 									"",
 									"pm.test('article title expected', () => {",
-									"    pm.expect(article.title).to.equal(\"Paywalled Article\");",
+									"    pm.expect(article.title).to.equal(\"Silver Article\");",
 									"});",
 									"pm.test('article description expected', () => {",
 									"    pm.expect(article.description).to.equal(\"Silver members only\");",
@@ -1257,9 +1342,14 @@
 									"    pm.expect(new Set(article.tagList)).to.deep.equal(new Set([",
 									"        \"Silver\",",
 									"        \"Paywall\"",
-									"    ]))});",
+									"    ]));",
+									"",
+									"});",
 									"pm.test('article paywall expected', () => {",
-									"   pm.expect(article.hasPaywall).to.equal(false);});"
+									"   pm.expect(article.hasPaywall).to.equal(true);",
+									"});",
+									"",
+									""
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1276,13 +1366,59 @@
 							}
 						],
 						"url": {
-							"raw": "{{APIURL}}/view/:slug",
+							"raw": "{{APIURL}}/articles/:slug/view",
 							"host": [
 								"{{APIURL}}"
 							],
 							"path": [
-								"view",
-								":slug"
+								"articles",
+								":slug",
+								"view"
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "{{silver_slug}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Free views Silver paywall",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{free_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{APIURL}}/articles/:slug/view",
+							"host": [
+								"{{APIURL}}"
+							],
+							"path": [
+								"articles",
+								":slug",
+								"view"
 							],
 							"variable": [
 								{
@@ -1346,6 +1482,84 @@
 							}
 						],
 						"url": {
+							"raw": "{{APIURL}}/profiles/:username",
+							"host": [
+								"{{APIURL}}"
+							],
+							"path": [
+								"profiles",
+								":username"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "gold_user"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Gold Member toggles Profile Paywall",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+									"});",
+									"",
+									"var responseJSON = JSON.parse(pm.response.text());",
+									"",
+									"tests['Response contains \\\"user\\\" property'] = responseJSON.hasOwnProperty('user');",
+									"var user = responseJSON.user;",
+									"",
+									"tests['User has \\\"email\\\" property'] = user.hasOwnProperty('email');",
+									"tests['User has \\\"username\\\" property'] = user.hasOwnProperty('username');",
+									"tests['User has \\\"bio\\\" property'] = user.hasOwnProperty('bio');",
+									"tests['User has \\\"image\\\" property'] = user.hasOwnProperty('image');",
+									"tests['User has \\\"token\\\" property'] = user.hasOwnProperty('token');",
+									"",
+									"tests['User has \\\"hasPaywall\\\" property'] = user.hasOwnProperty('hasPaywall');",
+									"",
+									"pm.test('Email, username, and bio match input', () => {",
+									"  pm.expect(user.email).to.equal(\"gold_user@gmail.com\")",
+									"  pm.expect(user.username).to.equal(\"gold_user\");",
+									"  pm.expect(user.bio).to.equal(null);",
+									"});",
+									"",
+									"",
+									"pm.test('hasPaywall match', () => {",
+									"  pm.expect(user.hasPaywall).to.equal(true)",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{gold_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"hasPaywall\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
 							"raw": "{{APIURL}}/user",
 							"host": [
 								"{{APIURL}}"
@@ -1358,36 +1572,15 @@
 					"response": []
 				},
 				{
-					"name": "Free Follow gold user",
+					"name": "Free follow Gold User paywall",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Successful POST request\", function () {",
-									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
-									"});",
-									"",
-									"var responseJSON = JSON.parse(pm.response.text());",
-									"",
-									"tests['Response contains \\\"profile\\\" property'] = responseJSON.hasOwnProperty('profile');",
-									"var profile = responseJSON.profile;",
-									"",
-									"tests['Profile has \\\"username\\\" property'] = profile.hasOwnProperty('username');",
-									"tests['Profile has \\\"bio\\\" property'] = profile.hasOwnProperty('bio');",
-									"tests['Profile has \\\"image\\\" property'] = profile.hasOwnProperty('image');",
-									"tests['Profile has \\\"following\\\" property'] = profile.hasOwnProperty('following');",
-									"tests['Profile has \\\"hasPaywall\\\" property'] = profile.hasOwnProperty('hasPaywall');",
-									"",
-									"pm.test('Profile fields match input', () => {",
-									"  pm.expect(profile.username).to.equal(\"gold_user\")",
-									"  pm.expect(profile.following).to.equal(true);",
-									"});",
-									"",
-									"pm.test('Profile hasPaywall matches input', () => {",
-									"  pm.expect(profile.hasPaywall).to.equal(false)",
-									"});",
-									""
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1427,64 +1620,6 @@
 					"response": []
 				},
 				{
-					"name": "Gold Member toggles Profile Paywall",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Successful POST request\", function () {",
-									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
-									"});",
-									"",
-									"var responseJSON = JSON.parse(pm.response.text());",
-									"",
-									"tests['Response contains \\\"profile\\\" property'] = responseJSON.hasOwnProperty('profile');",
-									"var profile = responseJSON.profile;",
-									"",
-									"tests['Profile has \\\"username\\\" property'] = profile.hasOwnProperty('username');",
-									"tests['Profile has \\\"bio\\\" property'] = profile.hasOwnProperty('bio');",
-									"tests['Profile has \\\"image\\\" property'] = profile.hasOwnProperty('image');",
-									"tests['Profile has \\\"following\\\" property'] = profile.hasOwnProperty('following');",
-									"tests['Profile has \\\"hasPaywall\\\" property'] = profile.hasOwnProperty('hasPaywall');",
-									"",
-									"pm.test('Profile fields match input', () => {",
-									"  pm.expect(profile.username).to.equal(\"gold_user\")",
-									"  pm.expect(profile.following).to.equal(true);",
-									"});",
-									"",
-									"pm.test('Profile hasPaywall matches input', () => {",
-									"  pm.expect(profile.hasPaywall).to.equal(true)",
-									"});",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Token {{gold_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{APIURL}}/user",
-							"host": [
-								"{{APIURL}}"
-							],
-							"path": [
-								"user"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Silver Member gets Gold Profile",
 					"event": [
 						{
@@ -1508,7 +1643,7 @@
 									"",
 									"pm.test('Profile fields match input', () => {",
 									"  pm.expect(profile.username).to.equal(\"gold_user\")",
-									"  pm.expect(profile.following).to.equal(true);",
+									"  pm.expect(profile.following).to.equal(false);",
 									"});",
 									"",
 									"pm.test('Profile hasPaywall matches input', () => {",
@@ -1531,12 +1666,19 @@
 							}
 						],
 						"url": {
-							"raw": "{{APIURL}}/user",
+							"raw": "{{APIURL}}/profiles/:username",
 							"host": [
 								"{{APIURL}}"
 							],
 							"path": [
-								"user"
+								"profiles",
+								":username"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "gold_user"
+								}
 							]
 						}
 					},
@@ -1566,7 +1708,23 @@
 								"value": "{{free_token}}",
 								"type": "text"
 							}
-						]
+						],
+						"url": {
+							"raw": "{{APIURL}}/profiles/:username",
+							"host": [
+								"{{APIURL}}"
+							],
+							"path": [
+								"profiles",
+								":username"
+							],
+							"variable": [
+								{
+									"key": "username",
+									"value": "gold_user"
+								}
+							]
+						}
 					},
 					"response": []
 				}
@@ -1759,7 +1917,7 @@
 									"pm.test('renewalDate match expected', () => {",
 									"    var expected = new Date();",
 									"    var actual = new Date(membership.renewalDate);",
-									"    expected.setMonth(expected.getMonth() + 1);",
+									"    expected.setMonth(expected.getMonth());",
 									"",
 									"    pm.expect(actual.getUTCDate()).to.equal(expected.getUTCDate());",
 									"    pm.expect(actual.getUTCMonth()).to.equal(expected.getUTCMonth());",

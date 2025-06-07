@@ -21,11 +21,13 @@ export declare class JwtStrategy extends JwtStrategy_base {
             bio: string;
             image: string;
             password: string;
+            hasPaywall: boolean;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
         }, unknown, never> & {})[];
         image: string;
+        hasPaywall: boolean;
     }>;
 }
 export {};

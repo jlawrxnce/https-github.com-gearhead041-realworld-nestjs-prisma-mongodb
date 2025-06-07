@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArticlesService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const runtime_1 = require("@prisma/client/runtime");
 const prisma_service_1 = require("../prisma/prisma.service");
 const dto_1 = require("../profiles/dto");
@@ -18,6 +19,26 @@ const dto_2 = require("./dto");
 let ArticlesService = class ArticlesService {
     constructor(prisma) {
         this.prisma = prisma;
+    }
+    async incrementViews(slug, user, revenueEarned = 0) {
+        const article = await this.prisma.article.update({
+            where: { slug },
+            data: {
+                numViews: { increment: 1 },
+                views: {
+                    create: {
+                        viewerId: (user === null || user === void 0 ? void 0 : user.id) || '',
+                        revenueEarned,
+                    },
+                },
+            },
+            include: {
+                author: true,
+                favouritedUsers: true,
+                views: true,
+            },
+        });
+        return this.findArticle(user, slug);
     }
     async checkPaywallAccess(articleId, user) {
         const article = await this.prisma.article.findUnique({
@@ -40,8 +61,8 @@ let ArticlesService = class ArticlesService {
         const userMembership = await this.prisma.membership.findUnique({
             where: { userId: user.id },
         });
-        if (!userMembership || userMembership.tier !== 'Gold') {
-            throw new common_1.ForbiddenException('This article requires a Gold membership');
+        if (!userMembership || userMembership.tier === client_1.Tier.Free) {
+            throw new common_1.ForbiddenException('This article requires a membership');
         }
     }
     async findArticles(user, tag, author, favorited, limit = 10, offset = 0) {
@@ -132,7 +153,8 @@ let ArticlesService = class ArticlesService {
         const userMembership = await this.prisma.membership.findUnique({
             where: { userId: user.id },
         });
-        if (dto.hasPaywall && (!userMembership || userMembership.tier !== 'Gold')) {
+        if (dto.hasPaywall &&
+            (!userMembership || userMembership.tier !== client_1.Tier.Gold)) {
             throw new common_1.ForbiddenException('Only Gold tier members can create paywalled articles');
         }
         const slug = dto.title.split(' ').join('-');

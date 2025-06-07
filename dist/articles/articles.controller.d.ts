@@ -4,6 +4,11 @@ import { MembershipService } from '../membership/membership.service';
 export declare class ArticlesController {
     private articleService;
     private membershipService;
+    viewArticle(user: User, slug: string): Promise<{
+        article: {};
+    } | {
+        article: import("./dto").ArticleDto;
+    }>;
     togglePaywall(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;

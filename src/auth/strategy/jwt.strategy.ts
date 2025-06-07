@@ -25,8 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         username: true,
         followers: true,
         image: true,
+        hasPaywall: true,
       },
     });
+
     return user;
   }
 }

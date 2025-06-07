@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Tier, User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
 import { JwtGuard } from '../common/guard';
 import { ArticlesService } from './articles.service';
@@ -24,24 +24,15 @@ export class ArticlesController {
   @UseGuards(JwtGuard)
   async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
     const article = await this.articleService.findArticle(user, slug);
-    
+
     // PaywallCheck
     if (article.hasPaywall) {
       const membership = await this.membershipService.getMembership(
         user.username,
       );
-      if (
-        !membership ||
-        membership.tier === 'SILVER' ||
-        membership.tier === 'FREE'
-      ) {
+      if (!membership || membership.tier === 'Free') {
         return { article: {} };
       }
-    }
-
-    // Don't count author's own views
-    if (article.author.username === user.username) {
-      return { article };
     }
 
     // Calculate revenue if article has paywall
@@ -51,7 +42,7 @@ export class ArticlesController {
         article.author.username,
       );
       if (authorMembership) {
-        revenueEarned = authorMembership.tier === 'GOLD' ? 0.25 : 0.10;
+        revenueEarned = authorMembership.tier === Tier.Gold ? 0.25 : 0.1;
         await this.membershipService.addRevenue(
           article.author.username,
           revenueEarned,
@@ -61,17 +52,17 @@ export class ArticlesController {
 
     const updatedArticle = await this.articleService.incrementViews(
       slug,
-      user.id,
+      user,
       revenueEarned,
     );
-
     return { article: updatedArticle };
   }
   @Put(':slug/paywall')
   @UseGuards(JwtGuard)
   async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
-    const hasGoldAccess = await this.membershipService.hasGoldAccess(user);
-    if (!hasGoldAccess) {
+    const hasMembershipAccess =
+      await this.membershipService.hasMembershipAccess(user);
+    if (!hasMembershipAccess) {
       throw new ForbiddenException(
         'Only gold members can toggle article paywall',
       );

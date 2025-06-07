@@ -1,12 +1,12 @@
-import { Tier } from '@prisma/client';
 export interface MembershipResponse {
     username: string;
-    tier: Tier;
+    tier: 'Free' | 'Silver' | 'Gold';
     renewalDate: Date;
     autoRenew: boolean;
+    totalRevenue: number;
 }
 export interface MembershipData {
-    tier: Tier;
+    tier: 'Free' | 'Silver' | 'Gold';
     autoRenew?: boolean;
 }
 export interface MembershipRO {

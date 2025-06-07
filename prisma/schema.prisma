@@ -12,6 +12,7 @@ datasource db {
 
 enum MembershipTier {
   Free
+  Silver
   Gold
 }
 
@@ -25,6 +26,8 @@ model User{
   membershipTier MembershipTier @default(Free)
   membershipRenewalDate DateTime?
   membershipAutoRenew Boolean @default(false)
+  hasPaywall Boolean @default(false)
+  totalRevenue Float @default(0)
   comments Comment[]
   articles Article[]
   followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])
@@ -33,6 +36,8 @@ model User{
   followingIds String[] @db.ObjectId
   articlesLiked Article[] @relation("likedArticles", fields: [articlesLikedIds], references: [id])
   articlesLikedIds String[] @db.ObjectId
+  viewedArticles Article[] @relation("viewedArticles", fields: [viewedArticleIds], references: [id])
+  viewedArticleIds String[] @db.ObjectId
 }
 
 model Article {
@@ -44,12 +49,15 @@ model Article {
   updatedAt DateTime @updatedAt
   body String
   hasPaywall Boolean @default(false)
+  numViews Int @default(0)
+  viewerIds String[] @db.ObjectId @default([])
   tagList String[] @default([])
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId String
+  authorId String @db.ObjectId
   comments Comment[]
+  viewers User[] @relation("viewedArticles", fields: [viewerIds], references: [id])
 }
 
 model Comment {

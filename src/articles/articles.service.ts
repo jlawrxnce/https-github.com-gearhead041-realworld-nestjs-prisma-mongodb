@@ -21,6 +21,73 @@ import {
 
 @Injectable()
 export class ArticlesService {
+  constructor(private prisma: PrismaService) {}
+
+  async viewArticle(user: User, slug: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            bio: true,
+            image: true,
+            membershipTier: true,
+            totalRevenue: true,
+          },
+        },
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Don't count author's own views
+    if (article.authorId === user.id) {
+      return article;
+    }
+
+    // Check if user has already viewed
+    if (article.viewerIds.includes(user.id)) {
+      return article;
+    }
+
+    // Update article views and add viewer
+    const updatedArticle = await this.prisma.article.update({
+      where: { slug },
+      data: {
+        numViews: { increment: 1 },
+        viewerIds: { push: user.id },
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            bio: true,
+            image: true,
+            membershipTier: true,
+            totalRevenue: true,
+          },
+        },
+      },
+    });
+
+    // Calculate revenue based on author's membership tier
+    const revenuePerView = updatedArticle.author.membershipTier === MembershipTier.Gold ? 0.25 : 0.1;
+
+    // Update author's revenue
+    await this.prisma.user.update({
+      where: { id: article.authorId },
+      data: {
+        totalRevenue: { increment: revenuePerView },
+      },
+    });
+
+    return updatedArticle;
+  }
   async togglePaywall(user: User, slug: string) {
     const userWithMembership = await this.prisma.user.findUnique({
       where: { id: user.id },

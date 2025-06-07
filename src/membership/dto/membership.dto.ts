@@ -5,6 +5,7 @@ export interface MembershipDto {
   tier: MembershipTier;
   renewalDate: Date;
   autoRenew: boolean;
+  totalRevenue: number;
 }
 
 export interface MembershipUpdateDto {

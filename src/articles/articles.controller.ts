@@ -18,17 +18,23 @@ import { ArticlesService } from './articles.service';
 
 @Controller('articles')
 export class ArticlesController {
+  constructor(private articleService: ArticlesService) {}
+
+  @UseGuards(JwtGuard)
+  @Put(':slug/view')
+  async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
+    return {
+      article: await this.articleService.viewArticle(user, slug),
+    };
+  }
+
   @UseGuards(JwtGuard)
   @Put(':slug/paywall')
-  async togglePaywall(
-    @GetUser() user: User,
-    @Param('slug') slug: string,
-  ) {
+  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
     return {
       article: await this.articleService.togglePaywall(user, slug),
     };
   }
-  constructor(private articleService: ArticlesService) {}
 
   @Get()
   @UseGuards(JwtGuard)

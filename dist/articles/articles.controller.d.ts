@@ -3,35 +3,6 @@ import { ArticlesService } from './articles.service';
 export declare class ArticlesController {
     private articleService;
     constructor(articleService: ArticlesService);
-    viewArticle(user: User, slug: string): Promise<{
-        article: {
-            author: {
-                id: string;
-                username: string;
-                bio: string;
-                image: string;
-                membershipTier: import(".prisma/client").MembershipTier;
-                totalRevenue: number;
-            };
-        } & import("@prisma/client/runtime").GetResult<{
-            id: string;
-            title: string;
-            slug: string;
-            description: string;
-            createdAt: Date;
-            updatedAt: Date;
-            body: string;
-            hasPaywall: boolean;
-            numViews: number;
-            viewerIds: string[];
-            tagList: string[];
-            favouritedUserIds: string[];
-            authorId: string;
-        }, unknown, never> & {};
-    }>;
-    togglePaywall(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
     getAllArticles(user: User, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<{
         articles: import("./dto").ArticleDto[];
         articlesCount: number;
@@ -61,6 +32,9 @@ export declare class ArticlesController {
         article: import("./dto").ArticleDto;
     }>;
     unfavoriteArticle(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
+    togglePaywall(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
 }

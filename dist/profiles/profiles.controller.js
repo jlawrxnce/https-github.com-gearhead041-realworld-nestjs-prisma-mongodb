@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const get_user_decorator_1 = require("../common/decorator/get-user.decorator");
 const guard_1 = require("../common/guard");
 const profiles_service_1 = require("./profiles.service");
-const decorator_1 = require("../common/decorator");
 let ProfilesController = class ProfilesController {
     constructor(profileService) {
         this.profileService = profileService;
@@ -34,7 +33,6 @@ let ProfilesController = class ProfilesController {
 };
 __decorate([
     (0, common_1.Get)(':username'),
-    (0, decorator_1.AllowAny)(),
     __param(0, (0, get_user_decorator_1.GetUser)()),
     __param(1, (0, common_1.Param)('username')),
     __metadata("design:type", Function),
@@ -59,7 +57,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProfilesController.prototype, "unfollowUser", null);
 ProfilesController = __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard),
     (0, common_1.Controller)('profiles'),
     __metadata("design:paramtypes", [profiles_service_1.ProfilesService])
 ], ProfilesController);

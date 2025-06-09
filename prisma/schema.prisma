@@ -10,12 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum MembershipTier {
-  Free
-  Silver
-  Gold
-}
-
 model User{
   id String @id @default(auto())  @map("_id") @db.ObjectId
   email String @unique
@@ -23,11 +17,6 @@ model User{
   bio String?
   image String?
   password String
-  membershipTier MembershipTier @default(Free)
-  membershipRenewalDate DateTime?
-  membershipAutoRenew Boolean @default(false)
-  hasPaywall Boolean @default(false)
-  totalRevenue Float @default(0)
   comments Comment[]
   articles Article[]
   followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])
@@ -36,8 +25,7 @@ model User{
   followingIds String[] @db.ObjectId
   articlesLiked Article[] @relation("likedArticles", fields: [articlesLikedIds], references: [id])
   articlesLikedIds String[] @db.ObjectId
-  viewedArticles Article[] @relation("viewedArticles", fields: [viewedArticleIds], references: [id])
-  viewedArticleIds String[] @db.ObjectId
+  membership Membership?
 }
 
 model Article {
@@ -48,16 +36,13 @@ model Article {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   body String
-  hasPaywall Boolean @default(false)
-  numViews Int @default(0)
-  viewerIds String[] @db.ObjectId @default([])
   tagList String[] @default([])
+  hasPaywall Boolean @default(false)
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId String @db.ObjectId
+  authorId String
   comments Comment[]
-  viewers User[] @relation("viewedArticles", fields: [viewerIds], references: [id])
 }
 
 model Comment {
@@ -69,5 +54,14 @@ model Comment {
   authorId String
   article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String
+}
+
+model Membership {
+  id String @id @default(auto())  @map("_id") @db.ObjectId
+  tier String @default("Free")
+  renewalDate DateTime @default(now())
+  autoRenew Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
 }
 

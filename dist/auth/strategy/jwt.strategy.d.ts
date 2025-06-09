@@ -32,8 +32,6 @@ export declare class JwtStrategy extends JwtStrategy_base {
             viewedArticleIds: string[];
         }, unknown, never> & {})[];
         image: string;
-        membershipTier: import(".prisma/client").MembershipTier;
-        totalRevenue: number;
     }>;
 }
 export {};

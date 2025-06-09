@@ -13,28 +13,13 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { AllowAny, GetUser } from '../common/decorator';
-import { JwtGuard, PaywallGuard } from '../common/guard';
+import { JwtGuard } from '../common/guard';
+import { PaywallGuard } from './guard';
 import { ArticlesService } from './articles.service';
 
 @Controller('articles')
 export class ArticlesController {
   constructor(private articleService: ArticlesService) {}
-
-  @UseGuards(JwtGuard, PaywallGuard)
-  @Put(':slug/view')
-  async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
-    return {
-      article: await this.articleService.viewArticle(user, slug),
-    };
-  }
-
-  @UseGuards(JwtGuard)
-  @Put(':slug/paywall')
-  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
-    return {
-      article: await this.articleService.togglePaywall(user, slug),
-    };
-  }
 
   @Get()
   @UseGuards(JwtGuard)
@@ -119,7 +104,7 @@ export class ArticlesController {
   async addCommentToArticle(
     @GetUser() user: User,
     @Param('slug') slug: string,
-    @Body() dto,
+    @Body() dto: any,
   ) {
     return {
       comment: await this.articleService.addCommentToArticle(
@@ -155,5 +140,13 @@ export class ArticlesController {
     return {
       article: await this.articleService.unfavouriteArticle(user, slug),
     };
+  }
+
+  // Add this new endpoint
+  @Put(':slug/paywall')
+  @UseGuards(JwtGuard)
+  async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
+    const article = await this.articleService.togglePaywall(user, slug);
+    return { article };
   }
 }

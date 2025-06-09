@@ -11,94 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArticlesService = void 0;
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const runtime_1 = require("@prisma/client/runtime");
 const prisma_service_1 = require("../prisma/prisma.service");
+const membership_service_1 = require("../membership/membership.service");
 const dto_1 = require("../profiles/dto");
 const dto_2 = require("./dto");
 let ArticlesService = class ArticlesService {
-    constructor(prisma) {
+    constructor(prisma, membershipService) {
         this.prisma = prisma;
-    }
-    async viewArticle(user, slug) {
-        const article = await this.prisma.article.findUnique({
-            where: { slug },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        bio: true,
-                        image: true,
-                        membershipTier: true,
-                        totalRevenue: true,
-                    },
-                },
-            },
-        });
-        if (!article) {
-            throw new common_1.NotFoundException('Article not found');
-        }
-        if (article.author.membershipTier === client_1.MembershipTier.Free ||
-            user.membershipTier === client_1.MembershipTier.Free) {
-            return article;
-        }
-        const updatedArticle = await this.prisma.article.update({
-            where: { slug },
-            data: {
-                numViews: { increment: 1 },
-                viewerIds: { push: user.id },
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        bio: true,
-                        image: true,
-                        membershipTier: true,
-                        totalRevenue: true,
-                    },
-                },
-            },
-        });
-        const revenuePerView = updatedArticle.author.membershipTier === client_1.MembershipTier.Gold ? 0.25 : 0.1;
-        console.log('updated aritcle', updatedArticle);
-        await this.prisma.user.update({
-            where: { id: article.authorId },
-            data: {
-                totalRevenue: { increment: revenuePerView },
-            },
-        });
-        return updatedArticle;
-    }
-    async togglePaywall(user, slug) {
-        var _a, _b;
-        const userWithMembership = await this.prisma.user.findUnique({
-            where: { id: user.id },
-            select: { membershipTier: true },
-        });
-        if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) === client_1.MembershipTier.Free) {
-            throw new common_1.ForbiddenException('Only Gold members can toggle paywalls');
-        }
-        const article = await this.prisma.article.findUnique({
-            where: { slug },
-            include: { author: true },
-        });
-        if (!article) {
-            throw new common_1.NotFoundException('Article not found');
-        }
-        if (article.authorId !== user.id) {
-            throw new common_1.ForbiddenException('Only the article author can toggle its paywall');
-        }
-        const updatedArticle = await this.prisma.article.update({
-            where: { slug },
-            data: { hasPaywall: !article.hasPaywall },
-            include: { author: true },
-        });
-        const following = ((_b = (_a = updatedArticle.author) === null || _a === void 0 ? void 0 : _a.followersIds) === null || _b === void 0 ? void 0 : _b.includes(user === null || user === void 0 ? void 0 : user.id)) || false;
-        const authorProfile = (0, dto_1.castToProfile)(updatedArticle.author, following);
-        return (0, dto_2.castToArticle)(updatedArticle, user, updatedArticle.tagList, authorProfile);
+        this.membershipService = membershipService;
     }
     async findArticles(user, tag, author, favorited, limit = 10, offset = 0) {
         let articles = await this.prisma.article.findMany({
@@ -333,10 +254,52 @@ let ArticlesService = class ArticlesService {
         const isfollowing = ((_a = articleUpdated.author) === null || _a === void 0 ? void 0 : _a.followersIds.includes(user.id)) || false;
         return (0, dto_2.castToArticle)(article, user, article.tagList, (0, dto_1.castToProfile)(articleUpdated.author, isfollowing));
     }
+    async togglePaywall(user, slug) {
+        const article = await this.prisma.article.findUnique({
+            where: { slug },
+            include: {
+                author: {
+                    include: {
+                        followers: true,
+                    },
+                },
+                favouritedUsers: true,
+            },
+        });
+        if (!article) {
+            throw new common_1.NotFoundException('Article not found');
+        }
+        if (article.authorId !== user.id) {
+            throw new common_1.ForbiddenException('You are not the author of this article');
+        }
+        const hasGoldMembership = await this.membershipService.checkGoldMembership(user.id);
+        if (!hasGoldMembership) {
+            throw new common_1.ForbiddenException('Only Gold members can toggle article paywall');
+        }
+        const updatedArticle = await this.prisma.article.update({
+            where: { slug },
+            data: {
+                hasPaywall: !article.hasPaywall,
+            },
+            include: {
+                author: {
+                    include: {
+                        followers: true,
+                    },
+                },
+                favouritedUsers: true,
+            },
+        });
+        const following = user
+            ? updatedArticle.author.followers.some((follower) => follower.id === user.id)
+            : false;
+        return (0, dto_2.castToArticle)(updatedArticle, user, updatedArticle.tagList, (0, dto_1.castToProfile)(updatedArticle.author, following));
+    }
 };
 ArticlesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        membership_service_1.MembershipService])
 ], ArticlesService);
 exports.ArticlesService = ArticlesService;
 //# sourceMappingURL=articles.service.js.map

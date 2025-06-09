@@ -35,6 +35,7 @@ let MembershipService = class MembershipService {
             tier: updatedUser.membershipTier,
             renewalDate: updatedUser.membershipRenewalDate,
             autoRenew: updatedUser.membershipAutoRenew,
+            totalRevenue: updatedUser.totalRevenue,
         };
     }
     async updateMembership(user, dto) {
@@ -56,6 +57,7 @@ let MembershipService = class MembershipService {
             tier: updatedUser.membershipTier,
             renewalDate: updatedUser.membershipRenewalDate,
             autoRenew: updatedUser.membershipAutoRenew,
+            totalRevenue: updatedUser.totalRevenue,
         };
     }
     async getMembership(user) {
@@ -67,6 +69,7 @@ let MembershipService = class MembershipService {
             tier: userWithMembership.membershipTier,
             renewalDate: userWithMembership.membershipRenewalDate,
             autoRenew: userWithMembership.membershipAutoRenew,
+            totalRevenue: userWithMembership.totalRevenue,
         };
     }
 };

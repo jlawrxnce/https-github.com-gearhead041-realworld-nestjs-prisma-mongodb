@@ -44,15 +44,22 @@ export class ArticlesService {
       throw new NotFoundException('Article not found');
     }
 
-    // Don't count author's own views
-    if (article.authorId === user.id) {
+    if (
+      article.author.membershipTier === MembershipTier.Free ||
+      user.membershipTier === MembershipTier.Free
+    ) {
       return article;
     }
 
-    // Check if user has already viewed
-    if (article.viewerIds.includes(user.id)) {
-      return article;
-    }
+    // Don't count author's own views
+    // if (article.authorId === user.id) {
+    //   return article;
+    // }
+
+    // // Check if user has already viewed
+    // if (article.viewerIds.includes(user.id)) {
+    //   return article;
+    // }
 
     // Update article views and add viewer
     const updatedArticle = await this.prisma.article.update({
@@ -76,8 +83,9 @@ export class ArticlesService {
     });
 
     // Calculate revenue based on author's membership tier
-    const revenuePerView = updatedArticle.author.membershipTier === MembershipTier.Gold ? 0.25 : 0.1;
-
+    const revenuePerView =
+      updatedArticle.author.membershipTier === MembershipTier.Gold ? 0.25 : 0.1;
+    console.log('updated aritcle', updatedArticle);
     // Update author's revenue
     await this.prisma.user.update({
       where: { id: article.authorId },
@@ -94,7 +102,7 @@ export class ArticlesService {
       select: { membershipTier: true },
     });
 
-    if (userWithMembership?.membershipTier !== MembershipTier.Gold) {
+    if (userWithMembership?.membershipTier === MembershipTier.Free) {
       throw new ForbiddenException('Only Gold members can toggle paywalls');
     }
 
@@ -108,7 +116,9 @@ export class ArticlesService {
     }
 
     if (article.authorId !== user.id) {
-      throw new ForbiddenException('Only the article author can toggle its paywall');
+      throw new ForbiddenException(
+        'Only the article author can toggle its paywall',
+      );
     }
 
     const updatedArticle = await this.prisma.article.update({
@@ -117,11 +127,16 @@ export class ArticlesService {
       include: { author: true },
     });
 
-    const following = updatedArticle.author?.followersIds?.includes(user?.id) || false;
+    const following =
+      updatedArticle.author?.followersIds?.includes(user?.id) || false;
     const authorProfile = castToProfile(updatedArticle.author, following);
-    return castToArticle(updatedArticle, user, updatedArticle.tagList, authorProfile);
+    return castToArticle(
+      updatedArticle,
+      user,
+      updatedArticle.tagList,
+      authorProfile,
+    );
   }
-  constructor(private prisma: PrismaService) {}
 
   async findArticles(
     user: User,

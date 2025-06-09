@@ -20,7 +20,7 @@ import { ArticlesService } from './articles.service';
 export class ArticlesController {
   constructor(private articleService: ArticlesService) {}
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, PaywallGuard)
   @Put(':slug/view')
   async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
     return {

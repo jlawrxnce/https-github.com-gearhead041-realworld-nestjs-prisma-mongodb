@@ -15,17 +15,28 @@ export class PaywallGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const slug = request.params.slug;
+    const username = request.params.username;
 
-    if (!slug) {
+    if (!slug && !username) {
       return true;
     }
+    if (slug) {
+      const article = await this.prisma.article.findUnique({
+        where: { slug },
+      });
 
-    const article = await this.prisma.article.findUnique({
-      where: { slug },
-    });
+      if (!article || !article.hasPaywall) {
+        return true;
+      }
+    }
+    if (username) {
+      const profile = await this.prisma.user.findUnique({
+        where: { username: username },
+      });
 
-    if (!article || !article.hasPaywall) {
-      return true;
+      if (!profile || !profile.hasPaywall) {
+        return true;
+      }
     }
 
     if (!user || !user.id) {
@@ -37,7 +48,7 @@ export class PaywallGuard implements CanActivate {
       select: { membershipTier: true },
     });
 
-    if (userWithMembership?.membershipTier !== MembershipTier.Gold) {
+    if (userWithMembership?.membershipTier === MembershipTier.Free) {
       throw new ForbiddenException('This content requires a Gold membership');
     }
 

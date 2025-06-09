@@ -20,13 +20,65 @@ let ArticlesService = class ArticlesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async viewArticle(user, slug) {
+        const article = await this.prisma.article.findUnique({
+            where: { slug },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        bio: true,
+                        image: true,
+                        membershipTier: true,
+                        totalRevenue: true,
+                    },
+                },
+            },
+        });
+        if (!article) {
+            throw new common_1.NotFoundException('Article not found');
+        }
+        if (article.author.membershipTier === client_1.MembershipTier.Free ||
+            user.membershipTier === client_1.MembershipTier.Free) {
+            return article;
+        }
+        const updatedArticle = await this.prisma.article.update({
+            where: { slug },
+            data: {
+                numViews: { increment: 1 },
+                viewerIds: { push: user.id },
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        bio: true,
+                        image: true,
+                        membershipTier: true,
+                        totalRevenue: true,
+                    },
+                },
+            },
+        });
+        const revenuePerView = updatedArticle.author.membershipTier === client_1.MembershipTier.Gold ? 0.25 : 0.1;
+        console.log('updated aritcle', updatedArticle);
+        await this.prisma.user.update({
+            where: { id: article.authorId },
+            data: {
+                totalRevenue: { increment: revenuePerView },
+            },
+        });
+        return updatedArticle;
+    }
     async togglePaywall(user, slug) {
         var _a, _b;
         const userWithMembership = await this.prisma.user.findUnique({
             where: { id: user.id },
             select: { membershipTier: true },
         });
-        if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) !== client_1.MembershipTier.Gold) {
+        if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) === client_1.MembershipTier.Free) {
             throw new common_1.ForbiddenException('Only Gold members can toggle paywalls');
         }
         const article = await this.prisma.article.findUnique({

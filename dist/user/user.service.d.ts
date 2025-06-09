@@ -14,8 +14,11 @@ export declare class UserService {
         membershipTier: import(".prisma/client").MembershipTier;
         membershipRenewalDate: Date;
         membershipAutoRenew: boolean;
+        hasPaywall: boolean;
+        totalRevenue: number;
         followersIds: string[];
         followingIds: string[];
         articlesLikedIds: string[];
+        viewedArticleIds: string[];
     }, unknown, never> & {}>;
 }

@@ -40,6 +40,7 @@ export class MembershipService {
       tier: updatedUser.membershipTier,
       renewalDate: updatedUser.membershipRenewalDate,
       autoRenew: updatedUser.membershipAutoRenew,
+      totalRevenue: updatedUser.totalRevenue,
     };
   }
 
@@ -68,6 +69,7 @@ export class MembershipService {
       tier: updatedUser.membershipTier,
       renewalDate: updatedUser.membershipRenewalDate,
       autoRenew: updatedUser.membershipAutoRenew,
+      totalRevenue: updatedUser.totalRevenue,
     };
   }
 
@@ -81,6 +83,7 @@ export class MembershipService {
       tier: userWithMembership.membershipTier,
       renewalDate: userWithMembership.membershipRenewalDate,
       autoRenew: userWithMembership.membershipAutoRenew,
+      totalRevenue: userWithMembership.totalRevenue,
     };
   }
 }

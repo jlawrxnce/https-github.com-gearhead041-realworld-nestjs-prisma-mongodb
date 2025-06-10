@@ -85,6 +85,7 @@ export class MembershipService {
         tier: MembershipTier.Free,
         renewalDate: new Date(),
         autoRenew: false,
+        totalRevenue: 0,
       };
     }
 
@@ -102,5 +103,16 @@ export class MembershipService {
     });
 
     return membership?.tier === MembershipTier.Gold;
+  }
+
+  async addRevenue(userId: string, amount: number): Promise<void> {
+    await this.prisma.membership.update({
+      where: { userId },
+      data: {
+        totalRevenue: {
+          increment: amount,
+        },
+      },
+    });
   }
 }

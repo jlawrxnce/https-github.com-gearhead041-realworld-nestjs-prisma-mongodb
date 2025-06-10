@@ -38,6 +38,7 @@ model Article {
   body String
   tagList String[] @default([])
   hasPaywall Boolean @default(false)
+  viewCount Int @default(0)
   favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
   favouritedUserIds String[] @db.ObjectId
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -61,6 +62,7 @@ model Membership {
   tier String @default("Free")
   renewalDate DateTime @default(now())
   autoRenew Boolean @default(false)
+  totalRevenue Float @default(0)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
 }

@@ -149,4 +149,11 @@ export class ArticlesController {
     const article = await this.articleService.togglePaywall(user, slug);
     return { article };
   }
+
+  @Put(':slug/view')
+  @UseGuards(JwtGuard, PaywallGuard)
+  async viewArticle(@GetUser() user: User, @Param('slug') slug: string) {
+    const article = await this.articleService.viewArticle(user, slug);
+    return { article };
+  }
 }

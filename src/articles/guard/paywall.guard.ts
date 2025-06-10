@@ -32,14 +32,16 @@ export class PaywallGuard implements CanActivate {
     }
 
     if (!user) {
-      throw new ForbiddenException('This content requires Gold membership');
+      throw new ForbiddenException(
+        'This content requires Silver or Gold membership',
+      );
     }
 
-    const isGoldMember = await this.membershipService.checkGoldMembership(
-      user.id,
-    );
-    if (!isGoldMember) {
-      throw new ForbiddenException('This content requires Gold membership');
+    const membership = await this.membershipService.getMembership(user.id);
+    if (!membership || membership.tier === 'Free') {
+      throw new ForbiddenException(
+        'This content requires Silver or Gold membership',
+      );
     }
 
     return true;

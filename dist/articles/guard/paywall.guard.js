@@ -22,21 +22,35 @@ let PaywallGuard = class PaywallGuard {
         const request = context.switchToHttp().getRequest();
         const slug = request.params.slug;
         const user = request.user;
-        const article = await this.prisma.article.findUnique({
-            where: { slug },
-        });
-        if (!article) {
-            return true;
+        const username = request.params.username;
+        if (slug) {
+            const article = await this.prisma.article.findUnique({
+                where: { slug },
+            });
+            if (!article) {
+                return true;
+            }
+            if (!article.hasPaywall) {
+                return true;
+            }
         }
-        if (!article.hasPaywall) {
-            return true;
+        if (username) {
+            const profile = await this.prisma.user.findUnique({
+                where: { username: username },
+            });
+            if (!profile) {
+                return true;
+            }
+            if (!profile.hasPaywall) {
+                return true;
+            }
         }
-        if (!user) {
-            throw new common_1.ForbiddenException('This content requires Gold membership');
+        if (!user || !user.id) {
+            throw new common_1.ForbiddenException('This content requires Silver or Gold membership');
         }
-        const isGoldMember = await this.membershipService.checkGoldMembership(user.id);
-        if (!isGoldMember) {
-            throw new common_1.ForbiddenException('This content requires Gold membership');
+        const membership = await this.membershipService.getMembership(user);
+        if (!membership || membership.tier === 'Free') {
+            throw new common_1.ForbiddenException('This content requires Silver or Gold membership');
         }
         return true;
     }

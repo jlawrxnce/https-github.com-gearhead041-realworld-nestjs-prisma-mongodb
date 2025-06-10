@@ -8,4 +8,5 @@ export declare class MembershipService {
     updateMembership(user: User, dto: MembershipUpdateDto): Promise<MembershipDto>;
     getMembership(user: User): Promise<MembershipDto>;
     checkGoldMembership(userId: string): Promise<boolean>;
+    addRevenue(userId: string, amount: number): Promise<void>;
 }

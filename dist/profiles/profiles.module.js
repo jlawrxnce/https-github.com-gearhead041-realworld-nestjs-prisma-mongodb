@@ -10,12 +10,14 @@ exports.ProfilesModule = void 0;
 const common_1 = require("@nestjs/common");
 const profiles_controller_1 = require("./profiles.controller");
 const profiles_service_1 = require("./profiles.service");
+const membership_module_1 = require("../membership/membership.module");
 let ProfilesModule = class ProfilesModule {
 };
 ProfilesModule = __decorate([
     (0, common_1.Module)({
         controllers: [profiles_controller_1.ProfilesController],
         providers: [profiles_service_1.ProfilesService],
+        imports: [membership_module_1.MembershipModule],
     })
 ], ProfilesModule);
 exports.ProfilesModule = ProfilesModule;

@@ -37,4 +37,7 @@ export declare class ArticlesController {
     togglePaywall(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
+    viewArticle(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
 }

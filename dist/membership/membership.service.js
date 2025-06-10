@@ -69,6 +69,7 @@ let MembershipService = class MembershipService {
                 tier: dto_1.MembershipTier.Free,
                 renewalDate: new Date(),
                 autoRenew: false,
+                totalRevenue: 0,
             };
         }
         return (0, dto_1.castToMembershipDto)(membership, user.username);
@@ -83,6 +84,16 @@ let MembershipService = class MembershipService {
             },
         });
         return (membership === null || membership === void 0 ? void 0 : membership.tier) === dto_1.MembershipTier.Gold;
+    }
+    async addRevenue(userId, amount) {
+        await this.prisma.membership.update({
+            where: { userId },
+            data: {
+                totalRevenue: {
+                    increment: amount,
+                },
+            },
+        });
     }
 };
 MembershipService = __decorate([

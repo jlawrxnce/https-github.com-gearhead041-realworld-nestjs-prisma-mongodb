@@ -18,26 +18,43 @@ export class PaywallGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const slug = request.params.slug;
     const user = request.user;
+    const username = request.params.username;
 
-    const article = await this.prisma.article.findUnique({
-      where: { slug },
-    });
+    if (slug) {
+      const article = await this.prisma.article.findUnique({
+        where: { slug },
+      });
 
-    if (!article) {
-      return true; // Let the controller handle 404
+      if (!article) {
+        return true; // Let the controller handle 404
+      }
+
+      if (!article.hasPaywall) {
+        return true;
+      }
     }
 
-    if (!article.hasPaywall) {
-      return true;
+    if (username) {
+      const profile = await this.prisma.user.findUnique({
+        where: { username: username },
+      });
+
+      if (!profile) {
+        return true;
+      }
+
+      if (!profile.hasPaywall) {
+        return true;
+      }
     }
 
-    if (!user) {
+    if (!user || !user.id) {
       throw new ForbiddenException(
         'This content requires Silver or Gold membership',
       );
     }
 
-    const membership = await this.membershipService.getMembership(user.id);
+    const membership = await this.membershipService.getMembership(user);
     if (!membership || membership.tier === 'Free') {
       throw new ForbiddenException(
         'This content requires Silver or Gold membership',

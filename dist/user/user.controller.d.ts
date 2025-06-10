@@ -13,15 +13,10 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
-            membershipTier: import(".prisma/client").MembershipTier;
-            membershipRenewalDate: Date;
-            membershipAutoRenew: boolean;
-            hasPaywall: boolean;
-            totalRevenue: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
-            viewedArticleIds: string[];
+            hasPaywall: boolean;
         };
     };
     updateUser(user: User, dto: UserForUpdate, token: string): Promise<{
@@ -33,15 +28,10 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
-            membershipTier: import(".prisma/client").MembershipTier;
-            membershipRenewalDate: Date;
-            membershipAutoRenew: boolean;
-            hasPaywall: boolean;
-            totalRevenue: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
-            viewedArticleIds: string[];
+            hasPaywall: boolean;
         };
     }>;
 }

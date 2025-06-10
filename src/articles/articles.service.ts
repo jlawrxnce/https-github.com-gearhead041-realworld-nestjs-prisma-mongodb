@@ -328,7 +328,7 @@ export class ArticlesService {
     }
 
     // Check if user has appropriate membership tier
-    const membership = await this.membershipService.getMembership(user.id);
+    const membership = await this.membershipService.getMembership(user);
     if (!membership || membership.tier === 'Free') {
       throw new ForbiddenException(
         'Only Silver or Gold members can create paywalls',
@@ -433,3 +433,4 @@ export class ArticlesService {
       authorProfile
     );
   }
+}

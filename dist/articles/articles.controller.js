@@ -75,6 +75,10 @@ let ArticlesController = class ArticlesController {
         const article = await this.articleService.togglePaywall(user, slug);
         return { article };
     }
+    async viewArticle(user, slug) {
+        const article = await this.articleService.viewArticle(user, slug);
+        return { article };
+    }
 };
 __decorate([
     (0, common_1.Get)(),
@@ -193,6 +197,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ArticlesController.prototype, "togglePaywall", null);
+__decorate([
+    (0, common_1.Put)(':slug/view'),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_2.PaywallGuard),
+    __param(0, (0, decorator_1.GetUser)()),
+    __param(1, (0, common_1.Param)('slug')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], ArticlesController.prototype, "viewArticle", null);
 ArticlesController = __decorate([
     (0, common_1.Controller)('articles'),
     __metadata("design:paramtypes", [articles_service_1.ArticlesService])

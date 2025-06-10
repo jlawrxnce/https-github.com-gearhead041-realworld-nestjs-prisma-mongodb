@@ -26,6 +26,7 @@ model User{
   articlesLiked Article[] @relation("likedArticles", fields: [articlesLikedIds], references: [id])
   articlesLikedIds String[] @db.ObjectId
   membership Membership?
+  hasPaywall Boolean @default(false)
 }
 
 model Article {

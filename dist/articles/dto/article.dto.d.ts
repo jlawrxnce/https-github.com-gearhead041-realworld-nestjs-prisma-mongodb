@@ -21,6 +21,7 @@ export interface ArticleDto {
     author: ProfileDto;
     favorited: boolean;
     hasPaywall: boolean;
+    viewCount: number;
     createdAt: Date;
     updatedAt: Date;
 }

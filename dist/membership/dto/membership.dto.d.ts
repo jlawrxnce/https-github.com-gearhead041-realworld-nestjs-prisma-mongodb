@@ -1,6 +1,7 @@
 import { Membership } from '@prisma/client';
 export declare enum MembershipTier {
     Free = "Free",
+    Silver = "Silver",
     Gold = "Gold"
 }
 export interface MembershipDto {
@@ -8,6 +9,7 @@ export interface MembershipDto {
     tier: MembershipTier;
     renewalDate: Date;
     autoRenew: boolean;
+    totalRevenue: number;
 }
 export interface MembershipActivateDto {
     tier: MembershipTier;

@@ -18,4 +18,5 @@ export declare class ArticlesService {
     favouriteArticle(user: User, slug: string): Promise<ArticleDto>;
     unfavouriteArticle(user: User, slug: string): Promise<ArticleDto>;
     togglePaywall(user: User, slug: string): Promise<ArticleDto>;
+    viewArticle(user: User, slug: string): Promise<ArticleDto>;
 }

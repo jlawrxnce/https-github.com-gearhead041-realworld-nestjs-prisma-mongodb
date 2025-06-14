@@ -6,6 +6,7 @@ import { TagsModule } from './tags/tags.module';
 import { UserModule } from './user/user.module';
 import { ArticlesModule } from './articles/articles.module';
 import { ConfigModule } from '@nestjs/config';
+import { MembershipModule } from './membership/membership.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     TagsModule,
     UserModule,
+    MembershipModule,
     ArticlesModule,
     ConfigModule.forRoot({
       isGlobal: true,

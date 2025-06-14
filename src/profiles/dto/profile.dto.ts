@@ -14,6 +14,6 @@ export function castToProfile(user: User, isFollowing: boolean): ProfileDto {
     bio: user.bio,
     image: user.image,
     following: isFollowing,
-    hasPaywall: user.hasPaywall || false,
+    hasPaywall: user.hasPaywall,
   };
 }

@@ -11,9 +11,9 @@ export declare class UserService {
         bio: string;
         image: string;
         password: string;
+        hasPaywall: boolean;
         followersIds: string[];
         followingIds: string[];
         articlesLikedIds: string[];
-        hasPaywall: boolean;
     }, unknown, never> & {}>;
 }

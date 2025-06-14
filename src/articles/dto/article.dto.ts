@@ -6,12 +6,14 @@ export interface ArticleForCreateDto {
   description: string;
   body: string;
   tagList?: string[];
+  hasPaywall?: boolean;
 }
 
 export interface ArticleForUpdateDto {
   title?: string;
   description?: string;
   body?: string;
+  hasPaywall?: boolean;
 }
 
 export interface ArticleDto {
@@ -23,10 +25,9 @@ export interface ArticleDto {
   favoritesCount: number;
   author: ProfileDto;
   favorited: boolean;
-  hasPaywall: boolean;
-  viewCount: number;
   createdAt: Date;
   updatedAt: Date;
+  hasPaywall: boolean;
 }
 
 export function castToArticle(
@@ -46,7 +47,6 @@ export function castToArticle(
     favorited: article.favouritedUserIds.includes(user?.id) || false,
     favoritesCount: article.favouritedUserIds.length,
     hasPaywall: article.hasPaywall,
-    viewCount: article.viewCount,
     author: author,
   };
 }

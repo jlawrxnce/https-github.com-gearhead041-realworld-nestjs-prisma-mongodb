@@ -1,8 +1,18 @@
 import { User } from '@prisma/client';
 import { ArticlesService } from './articles.service';
+import { MembershipService } from '../membership/membership.service';
 export declare class ArticlesController {
     private articleService;
-    constructor(articleService: ArticlesService);
+    private membershipService;
+    viewArticle(user: User, slug: string): Promise<{
+        article: {};
+    } | {
+        article: import("./dto").ArticleDto;
+    }>;
+    togglePaywall(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
+    constructor(articleService: ArticlesService, membershipService: MembershipService);
     getAllArticles(user: User, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<{
         articles: import("./dto").ArticleDto[];
         articlesCount: number;
@@ -24,7 +34,7 @@ export declare class ArticlesController {
     addCommentToArticle(user: User, slug: string, dto: any): Promise<{
         comment: import("./dto").CommentDto;
     }>;
-    getCommentsForArticle(slug: string): Promise<{
+    getCommentsForArticle(slug: string, user: User | null): Promise<{
         comments: import("./dto").CommentDto[];
     }>;
     deleteComment(slug: string, id: string): Promise<void>;
@@ -32,12 +42,6 @@ export declare class ArticlesController {
         article: import("./dto").ArticleDto;
     }>;
     unfavoriteArticle(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
-    togglePaywall(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
-    viewArticle(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
 }

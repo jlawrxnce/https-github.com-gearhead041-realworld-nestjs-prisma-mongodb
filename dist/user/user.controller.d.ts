@@ -13,10 +13,10 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
+            hasPaywall: boolean;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
-            hasPaywall: boolean;
         };
     };
     updateUser(user: User, dto: UserForUpdate, token: string): Promise<{
@@ -28,10 +28,10 @@ export declare class UserController {
             bio: string;
             image: string;
             password: string;
+            hasPaywall: boolean;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
-            hasPaywall: boolean;
         };
     }>;
 }

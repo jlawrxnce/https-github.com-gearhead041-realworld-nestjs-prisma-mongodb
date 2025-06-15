@@ -12,18 +12,20 @@ datasource db {
 
 enum Tier {
   Free
-  Silver
+  Trial
   Gold
 }
 
 model Membership {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  tier         Tier     @default(Free)
-  renewalDate  DateTime
-  autoRenew    Boolean  @default(false)
-  totalRevenue Float    @default(0)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String   @unique @db.ObjectId
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  tier              Tier     @default(Free)
+  renewalDate       DateTime
+  autoRenew         Boolean  @default(false)
+  totalRevenue      Float    @default(0)
+  totalViews        Int      @default(0)
+  activePaywallCount Int      @default(0)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String   @unique @db.ObjectId
 }
 
 model User {

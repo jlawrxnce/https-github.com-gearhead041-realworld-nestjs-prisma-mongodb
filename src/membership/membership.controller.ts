@@ -14,16 +14,11 @@ import { GetUser } from '../common/decorator';
 import { JwtGuard } from '../common/guard';
 import { MembershipService } from './membership.service';
 import { MembershipData, MembershipRO } from './dto/membership.dto';
-import { ArticleService } from '../article/article.service';
-import { ArticleRO } from '../article/dto/article.dto';
 
 @Controller('membership')
 @UseGuards(JwtGuard)
 export class MembershipController {
-  constructor(
-    private readonly membershipService: MembershipService,
-    private readonly articleService: ArticleService,
-  ) {}
+  constructor(private readonly membershipService: MembershipService) {}
 
   @Post()
   async activateMembership(
@@ -69,38 +64,5 @@ export class MembershipController {
   async renewMembership(@GetUser() user: User): Promise<MembershipRO> {
     const membership = await this.membershipService.renewMembership(user);
     return { membership };
-  }
-
-  @Put('article/:slug/paywall')
-  async togglePaywall(
-    @GetUser() user: User,
-    @Param('slug') slug: string,
-  ): Promise<ArticleRO> {
-    const canSetPaywall = await this.membershipService.canSetPaywall(user.id);
-    if (!canSetPaywall) {
-      throw new ForbiddenException(
-        'Cannot set paywall with current membership tier',
-      );
-    }
-
-    const article = await this.articleService.findBySlug(slug);
-    if (!article) {
-      throw new NotFoundException('Article not found');
-    }
-
-    if (article.authorId !== user.id) {
-      throw new ForbiddenException(
-        'Only the article author can toggle paywall',
-      );
-    }
-
-    // If we're enabling the paywall, check Trial tier limits
-    if (!article.hasPaywall) {
-      await this.membershipService.updatePaywallCount(user.id, true);
-    } else {
-      await this.membershipService.updatePaywallCount(user.id, false);
-    }
-
-    return this.articleService.togglePaywall(article);
   }
 }

@@ -24,7 +24,6 @@ export class ProfilesController {
     @GetUser() user: User | null,
     @Param('username') userName: string,
   ) {
-    console.log('findingUser', user, userName);
     return { profile: await this.profileService.findUser(user, userName) };
   }
 

@@ -42,7 +42,7 @@ export class ArticlesController {
         article.author.username,
       );
       if (authorMembership) {
-        revenueEarned = authorMembership.tier === Tier.Gold ? 0.25 : 0.1;
+        revenueEarned = 0.25;
         await this.membershipService.addRevenue(
           article.author.username,
           revenueEarned,
@@ -55,20 +55,27 @@ export class ArticlesController {
       user,
       revenueEarned,
     );
+    // update membership views too
+    await this.membershipService.incrementArticleViews(slug);
     return { article: updatedArticle };
   }
   @Put(':slug/paywall')
   @UseGuards(JwtGuard)
   async togglePaywall(@GetUser() user: User, @Param('slug') slug: string) {
-    const hasMembershipAccess =
-      await this.membershipService.hasMembershipAccess(user);
-    if (!hasMembershipAccess) {
+    const canSetPaywall = await this.membershipService.canSetPaywall(user.id);
+    if (!canSetPaywall) {
       throw new ForbiddenException(
-        'Only gold members can toggle article paywall',
+        'Cannot set paywall with current membership tier',
       );
     }
 
     const article = await this.articleService.findArticle(user, slug);
+
+    if (!article.hasPaywall) {
+      await this.membershipService.updatePaywallCount(user.id, true);
+    } else {
+      await this.membershipService.updatePaywallCount(user.id, false);
+    }
     const updatedArticle = await this.articleService.updateArticle(user, slug, {
       hasPaywall: !article.hasPaywall,
     });

@@ -8,7 +8,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MembershipData, MembershipResponse } from './dto/membership.dto';
 import { User, Tier } from '@prisma/client';
 
-
 @Injectable()
 export class MembershipService {
   private readonly TRIAL_DURATION_DAYS = 7;
@@ -83,15 +82,25 @@ export class MembershipService {
     }
 
     if (membership.tier === 'Gold' && data.tier === 'Trial') {
-      throw new UnprocessableEntityException('Gold users cannot downgrade to Trial tier');
+      throw new UnprocessableEntityException(
+        'Gold users cannot downgrade to Trial tier',
+      );
+    }
+    if (membership.tier === 'Gold' && data.tier === 'Free') {
+      data.tier = 'Gold';
+      data.autoRenew = false;
     }
 
     const updatedMembership = await this.prisma.membership.update({
       where: { userId: user.id },
       data: {
         tier: data.tier,
-        autoRenew: data.tier === 'Free' ? false : 
-          (data.autoRenew !== undefined ? data.autoRenew : membership.autoRenew),
+        autoRenew:
+          data.tier === 'Free'
+            ? false
+            : data.autoRenew !== undefined
+            ? data.autoRenew
+            : membership.autoRenew,
       },
       include: { user: true },
     });
@@ -106,14 +115,15 @@ export class MembershipService {
       renewalDate: membership.renewalDate,
       autoRenew: membership.autoRenew,
       totalRevenue: membership.totalRevenue || 0,
-      totalViews: membership.tier === 'Free' ? null : membership.totalViews || 0,
+      totalViews:
+        membership.tier === 'Free' ? null : membership.totalViews || 0,
     };
   }
 
   async getMembership(username: string): Promise<MembershipResponse> {
     const user = await this.prisma.user.findUnique({
       where: { username },
-      include: { membership: true },
+      include: { membership: { include: { user: true } } },
     });
 
     if (!user) {
@@ -150,21 +160,22 @@ export class MembershipService {
     const currentDate = new Date();
     const maxRenewalDate = new Date(currentDate.getTime());
     maxRenewalDate.setDate(currentDate.getDate() + this.MAX_RENEWAL_DAYS);
-
-    if (membership.renewalDate > maxRenewalDate) {
+    const renewalDate = new Date(membership.renewalDate.getTime());
+    renewalDate.setDate(renewalDate.getDate() + this.MEMBERSHIP_CYCLE_DAYS);
+    if (renewalDate > maxRenewalDate) {
       throw new ForbiddenException(
         'Cannot renew membership more than 75 days in advance',
       );
     }
 
     const newRenewalDate = new Date(membership.renewalDate.getTime());
-    
+
     if (membership.tier === 'Trial') {
-      // Trial users get upgraded to Gold immediately
+      // Trial users get upgraded to Gold at end of current trial
       newRenewalDate.setDate(
-        currentDate.getDate() + this.MEMBERSHIP_CYCLE_DAYS,
+        membership.renewalDate.getDate() + this.MEMBERSHIP_CYCLE_DAYS,
       );
-      
+
       const updatedMembership = await this.prisma.membership.update({
         where: { userId: user.id },
         data: {
@@ -173,7 +184,7 @@ export class MembershipService {
         },
         include: { user: true },
       });
-      
+
       return this.toMembershipResponse(updatedMembership);
     }
 
@@ -181,7 +192,7 @@ export class MembershipService {
     newRenewalDate.setDate(
       newRenewalDate.getDate() + this.MEMBERSHIP_CYCLE_DAYS,
     );
-    
+
     const updatedMembership = await this.prisma.membership.update({
       where: { userId: user.id },
       data: {
@@ -193,9 +204,9 @@ export class MembershipService {
     return this.toMembershipResponse(updatedMembership);
   }
 
-  async incrementArticleViews(articleId: string): Promise<void> {
+  async incrementArticleViews(slug: string): Promise<void> {
     const article = await this.prisma.article.findUnique({
-      where: { id: articleId },
+      where: { slug: slug },
       include: { author: { include: { membership: true } } },
     });
 
@@ -252,6 +263,6 @@ export class MembershipService {
       where: { userId: user.id },
     });
 
-    return membership?.tier === Tier.Gold || membership?.tier === Tier.Silver;
+    return membership?.tier === Tier.Gold || membership?.tier === Tier.Trial;
   }
 }

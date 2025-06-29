@@ -23,7 +23,6 @@ let ProfilesController = class ProfilesController {
         this.profileService = profileService;
     }
     async findUser(user, userName) {
-        console.log('findingUser', user, userName);
         return { profile: await this.profileService.findUser(user, userName) };
     }
     async followUser(user, userName) {

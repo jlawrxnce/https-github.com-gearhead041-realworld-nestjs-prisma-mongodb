@@ -25,12 +25,20 @@ let MembershipController = class MembershipController {
         const membership = await this.membershipService.createMembership(user, membershipData);
         return { membership };
     }
+    async getCurrentMembership(user) {
+        const membership = await this.membershipService.getMembership(user.username);
+        return { membership };
+    }
+    async getMembership(username) {
+        const membership = await this.membershipService.getMembership(username);
+        return { membership };
+    }
     async updateMembership(user, membershipData) {
         const membership = await this.membershipService.updateMembership(user, membershipData);
         return { membership };
     }
-    async getMembership(user) {
-        const membership = await this.membershipService.getMembership(user.username);
+    async renewMembership(user) {
+        const membership = await this.membershipService.renewMembership(user);
         return { membership };
     }
 };
@@ -43,6 +51,20 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MembershipController.prototype, "activateMembership", null);
 __decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MembershipController.prototype, "getCurrentMembership", null);
+__decorate([
+    (0, common_1.Get)(':username'),
+    __param(0, (0, common_1.Param)('username')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MembershipController.prototype, "getMembership", null);
+__decorate([
     (0, common_1.Put)(),
     __param(0, (0, decorator_1.GetUser)()),
     __param(1, (0, common_1.Body)('membership')),
@@ -51,12 +73,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MembershipController.prototype, "updateMembership", null);
 __decorate([
-    (0, common_1.Get)(),
+    (0, common_1.Put)('renew'),
     __param(0, (0, decorator_1.GetUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], MembershipController.prototype, "getMembership", null);
+], MembershipController.prototype, "renewMembership", null);
 MembershipController = __decorate([
     (0, common_1.Controller)('membership'),
     (0, common_1.UseGuards)(guard_1.JwtGuard),

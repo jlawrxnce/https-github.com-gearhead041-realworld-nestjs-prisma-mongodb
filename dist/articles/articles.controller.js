@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ArticlesController = void 0;
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
 const decorator_1 = require("../common/decorator");
 const guard_1 = require("../common/guard");
 const articles_service_1 = require("./articles.service");
@@ -37,19 +36,26 @@ let ArticlesController = class ArticlesController {
         if (article.hasPaywall) {
             const authorMembership = await this.membershipService.getMembership(article.author.username);
             if (authorMembership) {
-                revenueEarned = authorMembership.tier === client_1.Tier.Gold ? 0.25 : 0.1;
+                revenueEarned = 0.25;
                 await this.membershipService.addRevenue(article.author.username, revenueEarned);
             }
         }
         const updatedArticle = await this.articleService.incrementViews(slug, user, revenueEarned);
+        await this.membershipService.incrementArticleViews(slug);
         return { article: updatedArticle };
     }
     async togglePaywall(user, slug) {
-        const hasMembershipAccess = await this.membershipService.hasMembershipAccess(user);
-        if (!hasMembershipAccess) {
-            throw new common_2.ForbiddenException('Only gold members can toggle article paywall');
+        const canSetPaywall = await this.membershipService.canSetPaywall(user.id);
+        if (!canSetPaywall) {
+            throw new common_2.ForbiddenException('Cannot set paywall with current membership tier');
         }
         const article = await this.articleService.findArticle(user, slug);
+        if (!article.hasPaywall) {
+            await this.membershipService.updatePaywallCount(user.id, true);
+        }
+        else {
+            await this.membershipService.updatePaywallCount(user.id, false);
+        }
         const updatedArticle = await this.articleService.updateArticle(user, slug, {
             hasPaywall: !article.hasPaywall,
         });

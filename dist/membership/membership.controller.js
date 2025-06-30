@@ -36,6 +36,11 @@ let MembershipController = class MembershipController {
             membership: await this.membershipService.getMembership(user),
         };
     }
+    async renewMembership(user) {
+        return {
+            membership: await this.membershipService.renewMembership(user),
+        };
+    }
 };
 __decorate([
     (0, common_1.Post)(),
@@ -60,6 +65,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], MembershipController.prototype, "getMembership", null);
+__decorate([
+    (0, common_1.Put)('renew'),
+    __param(0, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], MembershipController.prototype, "renewMembership", null);
 MembershipController = __decorate([
     (0, common_1.UseGuards)(guard_1.JwtGuard),
     (0, common_1.Controller)('membership'),

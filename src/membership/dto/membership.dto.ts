@@ -1,4 +1,9 @@
-import { MembershipTier } from '@prisma/client';
+// Import the enum directly from our schema definition
+export enum MembershipTier {
+  Free = 'Free',
+  Trial = 'Trial',
+  Gold = 'Gold',
+}
 
 export interface MembershipDto {
   username: string;
@@ -6,6 +11,7 @@ export interface MembershipDto {
   renewalDate: Date;
   autoRenew: boolean;
   totalRevenue: number;
+  totalViews: number | null;
 }
 
 export interface MembershipUpdateDto {

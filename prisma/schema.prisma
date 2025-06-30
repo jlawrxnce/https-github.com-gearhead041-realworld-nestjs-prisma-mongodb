@@ -12,7 +12,7 @@ datasource db {
 
 enum MembershipTier {
   Free
-  Silver
+  Trial
   Gold
 }
 
@@ -28,6 +28,8 @@ model User{
   membershipAutoRenew Boolean @default(false)
   hasPaywall Boolean @default(false)
   totalRevenue Float @default(0)
+  totalViews Int @default(0)
+  activePaywalls Int @default(0)
   comments Comment[]
   articles Article[]
   followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])

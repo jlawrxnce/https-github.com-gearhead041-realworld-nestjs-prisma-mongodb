@@ -3,7 +3,11 @@ import { User } from '@prisma/client';
 import { GetUser } from '../common/decorator/get-user.decorator';
 import { JwtGuard } from '../common/guard';
 import { MembershipService } from './membership.service';
-import { MembershipDto, MembershipUpdateDto, MembershipActivateDto } from './dto/membership.dto';
+import {
+  MembershipDto,
+  MembershipUpdateDto,
+  MembershipActivateDto,
+} from './dto/membership.dto';
 
 @UseGuards(JwtGuard)
 @Controller('membership')
@@ -36,6 +40,15 @@ export class MembershipController {
   ): Promise<{ membership: MembershipDto }> {
     return {
       membership: await this.membershipService.getMembership(user),
+    };
+  }
+
+  @Put('renew')
+  async renewMembership(
+    @GetUser() user: User,
+  ): Promise<{ membership: MembershipDto }> {
+    return {
+      membership: await this.membershipService.renewMembership(user),
     };
   }
 }

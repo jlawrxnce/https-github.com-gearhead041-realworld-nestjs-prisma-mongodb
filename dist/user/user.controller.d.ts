@@ -8,7 +8,6 @@ export declare class UserController {
         user: {
             token: string;
             id: string;
-            hasPaywall: boolean;
             email: string;
             username: string;
             bio: string;
@@ -17,7 +16,10 @@ export declare class UserController {
             membershipTier: import(".prisma/client").MembershipTier;
             membershipRenewalDate: Date;
             membershipAutoRenew: boolean;
+            hasPaywall: boolean;
             totalRevenue: number;
+            totalViews: number;
+            activePaywalls: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
@@ -28,7 +30,6 @@ export declare class UserController {
         user: {
             token: string;
             id: string;
-            hasPaywall: boolean;
             email: string;
             username: string;
             bio: string;
@@ -37,7 +38,10 @@ export declare class UserController {
             membershipTier: import(".prisma/client").MembershipTier;
             membershipRenewalDate: Date;
             membershipAutoRenew: boolean;
+            hasPaywall: boolean;
             totalRevenue: number;
+            totalViews: number;
+            activePaywalls: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];

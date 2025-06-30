@@ -26,6 +26,8 @@ export declare class JwtStrategy extends JwtStrategy_base {
             membershipAutoRenew: boolean;
             hasPaywall: boolean;
             totalRevenue: number;
+            totalViews: number;
+            activePaywalls: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];

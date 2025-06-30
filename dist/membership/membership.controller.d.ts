@@ -13,4 +13,7 @@ export declare class MembershipController {
     getMembership(user: User): Promise<{
         membership: MembershipDto;
     }>;
+    renewMembership(user: User): Promise<{
+        membership: MembershipDto;
+    }>;
 }

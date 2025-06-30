@@ -7,4 +7,8 @@ export declare class MembershipService {
     activateMembership(user: User, dto: MembershipActivateDto): Promise<MembershipDto>;
     updateMembership(user: User, dto: MembershipUpdateDto): Promise<MembershipDto>;
     getMembership(user: User): Promise<MembershipDto>;
+    renewMembership(user: User): Promise<MembershipDto>;
+    toggleArticlePaywall(user: User, articleId: string): Promise<any>;
+    trackArticleView(articleId: string, viewerId: string): Promise<void>;
+    private formatMembershipResponse;
 }

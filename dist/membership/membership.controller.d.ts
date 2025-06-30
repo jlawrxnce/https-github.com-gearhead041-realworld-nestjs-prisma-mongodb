@@ -1,12 +1,16 @@
 import { User } from '@prisma/client';
 import { MembershipService } from './membership.service';
-import { MembershipData, MembershipRO } from './dto/membership.dto';
+import { MembershipDto, MembershipUpdateDto, MembershipActivateDto } from './dto/membership.dto';
 export declare class MembershipController {
-    private readonly membershipService;
+    private membershipService;
     constructor(membershipService: MembershipService);
-    activateMembership(user: User, membershipData: MembershipData): Promise<MembershipRO>;
-    getCurrentMembership(user: User): Promise<MembershipRO>;
-    getMembership(username: string): Promise<MembershipRO>;
-    updateMembership(user: User, membershipData: MembershipData): Promise<MembershipRO>;
-    renewMembership(user: User): Promise<MembershipRO>;
+    activateMembership(user: User, dto: MembershipActivateDto): Promise<{
+        membership: MembershipDto;
+    }>;
+    updateMembership(user: User, dto: MembershipUpdateDto): Promise<{
+        membership: MembershipDto;
+    }>;
+    getMembership(user: User): Promise<{
+        membership: MembershipDto;
+    }>;
 }

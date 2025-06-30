@@ -10,80 +10,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Tier {
+enum MembershipTier {
   Free
-  Trial
+  Silver
   Gold
 }
 
-model Membership {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  tier              Tier     @default(Free)
-  renewalDate       DateTime
-  autoRenew         Boolean  @default(false)
-  totalRevenue      Float    @default(0)
-  totalViews        Int      @default(0)
-  activePaywallCount Int      @default(0)
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId            String   @unique @db.ObjectId
-}
-
-model User {
-  id               String        @id @default(auto()) @map("_id") @db.ObjectId
-  email            String        @unique
-  username         String        @unique
-  bio              String?
-  image            String?
-  password         String
-  hasPaywall       Boolean       @default(false)
-  comments         Comment[]
-  articles         Article[]
-  followers        User[]        @relation("authorFollowers", fields: [followersIds], references: [id])
-  followersIds     String[]      @db.ObjectId
-  following        User[]        @relation("authorFollowers", fields: [followingIds], references: [id])
-  followingIds     String[]      @db.ObjectId
-  articlesLiked    Article[]     @relation("likedArticles", fields: [articlesLikedIds], references: [id])
-  articlesLikedIds String[]      @db.ObjectId
-  membership       Membership?
-  ArticleView      ArticleView[]
+model User{
+  id String @id @default(auto())  @map("_id") @db.ObjectId
+  email String @unique
+  username String @unique
+  bio String?
+  image String?
+  password String
+  membershipTier MembershipTier @default(Free)
+  membershipRenewalDate DateTime?
+  membershipAutoRenew Boolean @default(false)
+  hasPaywall Boolean @default(false)
+  totalRevenue Float @default(0)
+  comments Comment[]
+  articles Article[]
+  followers User[] @relation("authorFollowers", fields: [followersIds], references: [id])
+  followersIds String[] @db.ObjectId
+  following  User[] @relation("authorFollowers", fields: [followingIds], references: [id])
+  followingIds String[] @db.ObjectId
+  articlesLiked Article[] @relation("likedArticles", fields: [articlesLikedIds], references: [id])
+  articlesLikedIds String[] @db.ObjectId
+  viewedArticles Article[] @relation("viewedArticles", fields: [viewedArticleIds], references: [id])
+  viewedArticleIds String[] @db.ObjectId
 }
 
 model Article {
-  id                String        @id @default(auto()) @map("_id") @db.ObjectId
-  title             String
-  slug              String        @unique
-  description       String
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  body              String
-  hasPaywall        Boolean       @default(false)
-  numViews          Int           @default(0)
-  views             ArticleView[] @relation("articleViews")
-  tagList           String[]      @default([])
-  favouritedUsers   User[]        @relation("likedArticles", fields: [favouritedUserIds], references: [id])
-  favouritedUserIds String[]      @db.ObjectId
-  author            User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId          String
-  comments          Comment[]
-}
-
-model ArticleView {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  article       Article  @relation("articleViews", fields: [articleId], references: [id], onDelete: Cascade)
-  articleId     String   @db.ObjectId
-  viewer        User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
-  viewerId      String   @db.ObjectId
-  viewedAt      DateTime @default(now())
-  revenueEarned Float    @default(0)
+  id String @id @default(auto())  @map("_id") @db.ObjectId
+  title String
+  slug String @unique
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  body String
+  hasPaywall Boolean @default(false)
+  numViews Int @default(0)
+  viewerIds String[] @db.ObjectId @default([])
+  tagList String[] @default([])
+  favouritedUsers User[] @relation( "likedArticles", fields: [favouritedUserIds], references: [id])
+  favouritedUserIds String[] @db.ObjectId
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String @db.ObjectId
+  comments Comment[]
+  viewers User[] @relation("viewedArticles", fields: [viewerIds], references: [id])
 }
 
 model Comment {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  body      String
+  id String @id @default(auto())  @map("_id") @db.ObjectId
+  body String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
   articleId String
 }
+

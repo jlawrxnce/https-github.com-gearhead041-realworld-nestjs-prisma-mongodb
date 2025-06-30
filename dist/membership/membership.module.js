@@ -10,15 +10,12 @@ exports.MembershipModule = void 0;
 const common_1 = require("@nestjs/common");
 const membership_controller_1 = require("./membership.controller");
 const membership_service_1 = require("./membership.service");
-const prisma_module_1 = require("../prisma/prisma.module");
 let MembershipModule = class MembershipModule {
 };
 MembershipModule = __decorate([
     (0, common_1.Module)({
         controllers: [membership_controller_1.MembershipController],
         providers: [membership_service_1.MembershipService],
-        exports: [membership_service_1.MembershipService],
-        imports: [prisma_module_1.PrismaModule],
     })
 ], MembershipModule);
 exports.MembershipModule = MembershipModule;

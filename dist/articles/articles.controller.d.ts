@@ -1,18 +1,37 @@
 import { User } from '@prisma/client';
 import { ArticlesService } from './articles.service';
-import { MembershipService } from '../membership/membership.service';
 export declare class ArticlesController {
     private articleService;
-    private membershipService;
+    constructor(articleService: ArticlesService);
     viewArticle(user: User, slug: string): Promise<{
-        article: {};
-    } | {
-        article: import("./dto").ArticleDto;
+        article: {
+            author: {
+                id: string;
+                username: string;
+                bio: string;
+                image: string;
+                membershipTier: import(".prisma/client").MembershipTier;
+                totalRevenue: number;
+            };
+        } & import("@prisma/client/runtime").GetResult<{
+            id: string;
+            title: string;
+            slug: string;
+            description: string;
+            createdAt: Date;
+            updatedAt: Date;
+            body: string;
+            hasPaywall: boolean;
+            numViews: number;
+            viewerIds: string[];
+            tagList: string[];
+            favouritedUserIds: string[];
+            authorId: string;
+        }, unknown, never> & {};
     }>;
     togglePaywall(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
-    constructor(articleService: ArticlesService, membershipService: MembershipService);
     getAllArticles(user: User, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<{
         articles: import("./dto").ArticleDto[];
         articlesCount: number;
@@ -34,7 +53,7 @@ export declare class ArticlesController {
     addCommentToArticle(user: User, slug: string, dto: any): Promise<{
         comment: import("./dto").CommentDto;
     }>;
-    getCommentsForArticle(slug: string, user: User | null): Promise<{
+    getCommentsForArticle(slug: string): Promise<{
         comments: import("./dto").CommentDto[];
     }>;
     deleteComment(slug: string, id: string): Promise<void>;

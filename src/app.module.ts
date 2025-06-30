@@ -5,8 +5,8 @@ import { AuthModule } from './auth/auth.module';
 import { TagsModule } from './tags/tags.module';
 import { UserModule } from './user/user.module';
 import { ArticlesModule } from './articles/articles.module';
-import { ConfigModule } from '@nestjs/config';
 import { MembershipModule } from './membership/membership.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -15,8 +15,8 @@ import { MembershipModule } from './membership/membership.module';
     AuthModule,
     TagsModule,
     UserModule,
-    MembershipModule,
     ArticlesModule,
+    MembershipModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

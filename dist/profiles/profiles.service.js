@@ -13,11 +13,9 @@ exports.ProfilesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const dto_1 = require("./dto");
-const membership_service_1 = require("../membership/membership.service");
 let ProfilesService = class ProfilesService {
-    constructor(prisma, membershipService) {
+    constructor(prisma) {
         this.prisma = prisma;
-        this.membershipService = membershipService;
     }
     async findUser(user, userName) {
         const userFromDb = await this.prisma.user.findUnique({
@@ -27,27 +25,11 @@ let ProfilesService = class ProfilesService {
         });
         if (!userFromDb)
             throw new common_1.NotFoundException('user not found');
-        if (userFromDb.hasPaywall && user) {
-            const membership = await this.membershipService.getMembership(user.username);
-            if (!membership || membership.tier === 'Free') {
-                throw new common_1.ForbiddenException('Cannot access paywalled profile');
-            }
-        }
-        else if (userFromDb.hasPaywall && !user) {
-            throw new common_1.ForbiddenException('Cannot access paywalled profile');
-        }
-        const isFollowing = user ? userFromDb.followersIds.includes(user.id) : false;
+        const isFollowing = userFromDb.followersIds.includes(user.id);
         const profile = (0, dto_1.castToProfile)(userFromDb, isFollowing);
         return profile;
     }
     async followUser(user, userName) {
-        const userToFollow = await this.findUser(user, userName);
-        if (userToFollow.hasPaywall) {
-            const membership = await this.membershipService.getMembership(user.username);
-            if (!membership || membership.tier === 'Free') {
-                throw new common_1.ForbiddenException('user not found');
-            }
-        }
         const userFollowed = await this.prisma.user.update({
             where: {
                 username: userName,
@@ -78,8 +60,7 @@ let ProfilesService = class ProfilesService {
 };
 ProfilesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        membership_service_1.MembershipService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], ProfilesService);
 exports.ProfilesService = ProfilesService;
 //# sourceMappingURL=profiles.service.js.map

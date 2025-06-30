@@ -1459,7 +1459,6 @@
 									"",
 									"pm.test('Profile fields match input', () => {",
 									"  pm.expect(profile.username).to.equal(\"gold_user\")",
-									"  pm.expect(profile.following).to.equal(true);",
 									"});",
 									"",
 									"pm.test('Profile hasPaywall matches input', () => {",

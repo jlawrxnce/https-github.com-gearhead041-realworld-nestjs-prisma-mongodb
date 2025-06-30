@@ -14,10 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfilesController = void 0;
 const common_1 = require("@nestjs/common");
-const decorator_1 = require("../common/decorator");
 const get_user_decorator_1 = require("../common/decorator/get-user.decorator");
 const guard_1 = require("../common/guard");
 const profiles_service_1 = require("./profiles.service");
+const decorator_1 = require("../common/decorator");
 let ProfilesController = class ProfilesController {
     constructor(profileService) {
         this.profileService = profileService;
@@ -59,7 +59,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProfilesController.prototype, "unfollowUser", null);
 ProfilesController = __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
     (0, common_1.Controller)('profiles'),
     __metadata("design:paramtypes", [profiles_service_1.ProfilesService])
 ], ProfilesController);

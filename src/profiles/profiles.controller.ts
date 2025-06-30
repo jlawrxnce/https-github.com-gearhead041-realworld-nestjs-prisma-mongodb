@@ -9,21 +9,18 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { AllowAny } from 'src/common/decorator';
 import { GetUser } from 'src/common/decorator/get-user.decorator';
-import { JwtGuard } from 'src/common/guard';
+import { JwtGuard, PaywallGuard } from 'src/common/guard';
 import { ProfilesService } from './profiles.service';
+import { AllowAny } from 'src/common/decorator';
 
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, PaywallGuard)
 @Controller('profiles')
 export class ProfilesController {
   constructor(private profileService: ProfilesService) {}
   @Get(':username')
   @AllowAny()
-  async findUser(
-    @GetUser() user: User | null,
-    @Param('username') userName: string,
-  ) {
+  async findUser(@GetUser() user: User, @Param('username') userName: string) {
     return { profile: await this.profileService.findUser(user, userName) };
   }
 

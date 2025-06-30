@@ -8,30 +8,40 @@ export declare class UserController {
         user: {
             token: string;
             id: string;
+            hasPaywall: boolean;
             email: string;
             username: string;
             bio: string;
             image: string;
             password: string;
-            hasPaywall: boolean;
+            membershipTier: import(".prisma/client").MembershipTier;
+            membershipRenewalDate: Date;
+            membershipAutoRenew: boolean;
+            totalRevenue: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
+            viewedArticleIds: string[];
         };
     };
     updateUser(user: User, dto: UserForUpdate, token: string): Promise<{
         user: {
             token: string;
             id: string;
+            hasPaywall: boolean;
             email: string;
             username: string;
             bio: string;
             image: string;
             password: string;
-            hasPaywall: boolean;
+            membershipTier: import(".prisma/client").MembershipTier;
+            membershipRenewalDate: Date;
+            membershipAutoRenew: boolean;
+            totalRevenue: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
+            viewedArticleIds: string[];
         };
     }>;
 }

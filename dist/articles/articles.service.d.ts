@@ -1,33 +1,10 @@
-import { MembershipTier, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArticleForCreateDto, ArticleForUpdateDto, CommentForCreateDto } from './dto';
 export declare class ArticlesService {
     private prisma;
     constructor(prisma: PrismaService);
-    viewArticle(user: User, slug: string): Promise<{
-        author: {
-            id: string;
-            username: string;
-            bio: string;
-            image: string;
-            membershipTier: MembershipTier;
-            totalRevenue: number;
-        };
-    } & import("@prisma/client/runtime").GetResult<{
-        id: string;
-        title: string;
-        slug: string;
-        description: string;
-        createdAt: Date;
-        updatedAt: Date;
-        body: string;
-        hasPaywall: boolean;
-        numViews: number;
-        viewerIds: string[];
-        tagList: string[];
-        favouritedUserIds: string[];
-        authorId: string;
-    }, unknown, never> & {}>;
+    viewArticle(user: User, slug: string): Promise<import("./dto").ArticleDto>;
     togglePaywall(user: User, slug: string): Promise<import("./dto").ArticleDto>;
     findArticles(user: User, tag: string, author: string, favorited?: string, limit?: number, offset?: number): Promise<import("./dto").ArticleDto[]>;
     findArticle(user: User, slug: string): Promise<import("./dto").ArticleDto>;

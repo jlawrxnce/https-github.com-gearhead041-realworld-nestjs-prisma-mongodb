@@ -21,27 +21,20 @@ let ArticlesService = class ArticlesService {
         this.prisma = prisma;
     }
     async viewArticle(user, slug) {
+        var _a, _b;
         const article = await this.prisma.article.findUnique({
             where: { slug },
             include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        bio: true,
-                        image: true,
-                        membershipTier: true,
-                        totalRevenue: true,
-                    },
-                },
+                author: true,
             },
         });
         if (!article) {
             throw new common_1.NotFoundException('Article not found');
         }
-        if (article.author.membershipTier === client_1.MembershipTier.Free ||
-            user.membershipTier === client_1.MembershipTier.Free) {
-            return article;
+        const following = ((_b = (_a = article.author) === null || _a === void 0 ? void 0 : _a.followersIds) === null || _b === void 0 ? void 0 : _b.includes(user === null || user === void 0 ? void 0 : user.id)) || false;
+        if (article.author.membershipTier === client_1.MembershipTier.Free) {
+            const authorProfile = (0, dto_1.castToProfile)(article.author, following);
+            return (0, dto_2.castToArticle)(article, user, article.tagList, authorProfile);
         }
         const updatedArticle = await this.prisma.article.update({
             where: { slug },
@@ -50,36 +43,33 @@ let ArticlesService = class ArticlesService {
                 viewerIds: { push: user.id },
             },
             include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        bio: true,
-                        image: true,
-                        membershipTier: true,
-                        totalRevenue: true,
-                    },
-                },
+                author: true,
             },
         });
-        const revenuePerView = updatedArticle.author.membershipTier === client_1.MembershipTier.Gold ? 0.25 : 0.1;
-        console.log('updated aritcle', updatedArticle);
+        const revenuePerView = user.membershipTier === client_1.MembershipTier.Free ? 0 : 0.25;
         await this.prisma.user.update({
             where: { id: article.authorId },
             data: {
                 totalRevenue: { increment: revenuePerView },
+                totalViews: { increment: 1 },
             },
         });
-        return updatedArticle;
+        const authorProfile = (0, dto_1.castToProfile)(updatedArticle.author, following);
+        return (0, dto_2.castToArticle)(updatedArticle, user, updatedArticle.tagList, authorProfile);
     }
     async togglePaywall(user, slug) {
         var _a, _b;
         const userWithMembership = await this.prisma.user.findUnique({
             where: { id: user.id },
-            select: { membershipTier: true },
+            select: { membershipTier: true, activePaywalls: true },
         });
         if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) === client_1.MembershipTier.Free) {
             throw new common_1.ForbiddenException('Only Gold members can toggle paywalls');
+        }
+        if ((userWithMembership === null || userWithMembership === void 0 ? void 0 : userWithMembership.membershipTier) === client_1.MembershipTier.Trial) {
+            if (userWithMembership.activePaywalls === 3) {
+                throw new common_1.ForbiddenException('Cannot put more than 3 active paywalls as a trial user');
+            }
         }
         const article = await this.prisma.article.findUnique({
             where: { slug },
@@ -91,10 +81,17 @@ let ArticlesService = class ArticlesService {
         if (article.authorId !== user.id) {
             throw new common_1.ForbiddenException('Only the article author can toggle its paywall');
         }
+        const updatedPaywallCount = !article.hasPaywall
+            ? userWithMembership.activePaywalls + 1
+            : userWithMembership.activePaywalls - 1;
         const updatedArticle = await this.prisma.article.update({
             where: { slug },
             data: { hasPaywall: !article.hasPaywall },
             include: { author: true },
+        });
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { activePaywalls: updatedPaywallCount },
         });
         const following = ((_b = (_a = updatedArticle.author) === null || _a === void 0 ? void 0 : _a.followersIds) === null || _b === void 0 ? void 0 : _b.includes(user === null || user === void 0 ? void 0 : user.id)) || false;
         const authorProfile = (0, dto_1.castToProfile)(updatedArticle.author, following);

@@ -4,30 +4,7 @@ export declare class ArticlesController {
     private articleService;
     constructor(articleService: ArticlesService);
     viewArticle(user: User, slug: string): Promise<{
-        article: {
-            author: {
-                id: string;
-                username: string;
-                bio: string;
-                image: string;
-                membershipTier: import(".prisma/client").MembershipTier;
-                totalRevenue: number;
-            };
-        } & import("@prisma/client/runtime").GetResult<{
-            id: string;
-            title: string;
-            slug: string;
-            description: string;
-            createdAt: Date;
-            updatedAt: Date;
-            body: string;
-            hasPaywall: boolean;
-            numViews: number;
-            viewerIds: string[];
-            tagList: string[];
-            favouritedUserIds: string[];
-            authorId: string;
-        }, unknown, never> & {};
+        article: import("./dto").ArticleDto;
     }>;
     togglePaywall(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;

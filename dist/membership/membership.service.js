@@ -91,8 +91,8 @@ let MembershipService = class MembershipService {
         }
         let newRenewalDate;
         if (currentUser.membershipTier === 'Trial') {
-            newRenewalDate = new Date();
-            newRenewalDate.setMonth(newRenewalDate.getMonth() + 1);
+            newRenewalDate = currentUser.membershipRenewalDate;
+            newRenewalDate.setDate(newRenewalDate.getDate() + 30);
             const updatedUser = await this.prisma.user.update({
                 where: { id: user.id },
                 data: {
@@ -105,7 +105,7 @@ let MembershipService = class MembershipService {
         if (currentUser.membershipRenewalDate) {
             const currentRenewalDate = new Date(currentUser.membershipRenewalDate);
             newRenewalDate = new Date(currentRenewalDate);
-            newRenewalDate.setMonth(newRenewalDate.getMonth() + 1);
+            newRenewalDate.setDate(newRenewalDate.getDate() + 30);
             const maxAllowedRenewalDate = new Date();
             maxAllowedRenewalDate.setDate(maxAllowedRenewalDate.getDate() + 75);
             if (newRenewalDate > maxAllowedRenewalDate) {
@@ -132,7 +132,7 @@ let MembershipService = class MembershipService {
         if (!currentUser) {
             throw new common_1.ForbiddenException('User not found');
         }
-        const article = currentUser.articles.find(a => a.id === articleId);
+        const article = currentUser.articles.find((a) => a.id === articleId);
         if (!article) {
             throw new common_1.ForbiddenException('You can only toggle paywall on your own articles');
         }
@@ -155,8 +155,8 @@ let MembershipService = class MembershipService {
                 where: { id: user.id },
                 data: {
                     activePaywalls: {
-                        increment: activePaywallsDelta
-                    }
+                        increment: activePaywallsDelta,
+                    },
                 },
             }),
         ]);

@@ -27,39 +27,19 @@ export class ArticlesService {
     const article = await this.prisma.article.findUnique({
       where: { slug },
       include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            bio: true,
-            image: true,
-            membershipTier: true,
-            totalRevenue: true,
-          },
-        },
+        author: true,
       },
     });
 
     if (!article) {
       throw new NotFoundException('Article not found');
     }
+    const following = article.author?.followersIds?.includes(user?.id) || false;
 
-    if (
-      article.author.membershipTier === MembershipTier.Free ||
-      user.membershipTier === MembershipTier.Free
-    ) {
-      return article;
+    if (article.author.membershipTier === MembershipTier.Free) {
+      const authorProfile = castToProfile(article.author, following);
+      return castToArticle(article, user, article.tagList, authorProfile);
     }
-
-    // Don't count author's own views
-    // if (article.authorId === user.id) {
-    //   return article;
-    // }
-
-    // // Check if user has already viewed
-    // if (article.viewerIds.includes(user.id)) {
-    //   return article;
-    // }
 
     // Update article views and add viewer
     const updatedArticle = await this.prisma.article.update({
@@ -69,41 +49,46 @@ export class ArticlesService {
         viewerIds: { push: user.id },
       },
       include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            bio: true,
-            image: true,
-            membershipTier: true,
-            totalRevenue: true,
-          },
-        },
+        author: true,
       },
     });
 
     // Calculate revenue based on author's membership tier
     const revenuePerView =
-      updatedArticle.author.membershipTier === MembershipTier.Gold ? 0.25 : 0.1;
-    console.log('updated aritcle', updatedArticle);
+      user.membershipTier === MembershipTier.Free ? 0 : 0.25;
     // Update author's revenue
     await this.prisma.user.update({
       where: { id: article.authorId },
       data: {
         totalRevenue: { increment: revenuePerView },
+        totalViews: { increment: 1 },
       },
     });
-
-    return updatedArticle;
+    const authorProfile = castToProfile(updatedArticle.author, following);
+    return castToArticle(
+      updatedArticle,
+      user,
+      updatedArticle.tagList,
+      authorProfile,
+    );
   }
   async togglePaywall(user: User, slug: string) {
     const userWithMembership = await this.prisma.user.findUnique({
       where: { id: user.id },
-      select: { membershipTier: true },
+      select: { membershipTier: true, activePaywalls: true },
     });
 
     if (userWithMembership?.membershipTier === MembershipTier.Free) {
       throw new ForbiddenException('Only Gold members can toggle paywalls');
+    }
+
+    if (userWithMembership?.membershipTier === MembershipTier.Trial) {
+      // check # of active trial paywalls
+      if (userWithMembership.activePaywalls === 3) {
+        throw new ForbiddenException(
+          'Cannot put more than 3 active paywalls as a trial user',
+        );
+      }
     }
 
     const article = await this.prisma.article.findUnique({
@@ -121,10 +106,19 @@ export class ArticlesService {
       );
     }
 
+    const updatedPaywallCount = !article.hasPaywall
+      ? userWithMembership.activePaywalls + 1
+      : userWithMembership.activePaywalls - 1;
+
     const updatedArticle = await this.prisma.article.update({
       where: { slug },
       data: { hasPaywall: !article.hasPaywall },
       include: { author: true },
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { activePaywalls: updatedPaywallCount },
     });
 
     const following =

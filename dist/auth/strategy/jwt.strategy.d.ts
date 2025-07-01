@@ -21,21 +21,13 @@ export declare class JwtStrategy extends JwtStrategy_base {
             bio: string;
             image: string;
             password: string;
-            membershipTier: import(".prisma/client").MembershipTier;
-            membershipRenewalDate: Date;
-            membershipAutoRenew: boolean;
-            hasPaywall: boolean;
-            totalRevenue: number;
-            totalViews: number;
-            activePaywalls: number;
             followersIds: string[];
             followingIds: string[];
             articlesLikedIds: string[];
-            viewedArticleIds: string[];
+            hasPaywall: boolean;
         }, unknown, never> & {})[];
         image: string;
-        membershipTier: import(".prisma/client").MembershipTier;
-        totalRevenue: number;
+        hasPaywall: boolean;
     }>;
 }
 export {};

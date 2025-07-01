@@ -10,12 +10,15 @@ exports.ArticlesModule = void 0;
 const common_1 = require("@nestjs/common");
 const articles_controller_1 = require("./articles.controller");
 const articles_service_1 = require("./articles.service");
+const membership_module_1 = require("../membership/membership.module");
+const guard_1 = require("./guard");
 let ArticlesModule = class ArticlesModule {
 };
 ArticlesModule = __decorate([
     (0, common_1.Module)({
+        imports: [membership_module_1.MembershipModule],
         controllers: [articles_controller_1.ArticlesController],
-        providers: [articles_service_1.ArticlesService],
+        providers: [articles_service_1.ArticlesService, guard_1.PaywallGuard],
     })
 ], ArticlesModule);
 exports.ArticlesModule = ArticlesModule;

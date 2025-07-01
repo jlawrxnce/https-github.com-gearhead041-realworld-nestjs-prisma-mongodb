@@ -16,6 +16,7 @@ MembershipModule = __decorate([
     (0, common_1.Module)({
         controllers: [membership_controller_1.MembershipController],
         providers: [membership_service_1.MembershipService],
+        exports: [membership_service_1.MembershipService],
     })
 ], MembershipModule);
 exports.MembershipModule = MembershipModule;

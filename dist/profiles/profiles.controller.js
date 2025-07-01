@@ -18,6 +18,7 @@ const get_user_decorator_1 = require("../common/decorator/get-user.decorator");
 const guard_1 = require("../common/guard");
 const profiles_service_1 = require("./profiles.service");
 const decorator_1 = require("../common/decorator");
+const guard_2 = require("../articles/guard");
 let ProfilesController = class ProfilesController {
     constructor(profileService) {
         this.profileService = profileService;
@@ -59,7 +60,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProfilesController.prototype, "unfollowUser", null);
 ProfilesController = __decorate([
-    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_1.PaywallGuard),
+    (0, common_1.UseGuards)(guard_1.JwtGuard, guard_2.PaywallGuard),
     (0, common_1.Controller)('profiles'),
     __metadata("design:paramtypes", [profiles_service_1.ProfilesService])
 ], ProfilesController);

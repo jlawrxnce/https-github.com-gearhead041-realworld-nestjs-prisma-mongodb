@@ -10,9 +10,10 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { GetUser } from 'src/common/decorator/get-user.decorator';
-import { JwtGuard, PaywallGuard } from 'src/common/guard';
+import { JwtGuard } from 'src/common/guard';
 import { ProfilesService } from './profiles.service';
 import { AllowAny } from 'src/common/decorator';
+import { PaywallGuard } from 'src/articles/guard';
 
 @UseGuards(JwtGuard, PaywallGuard)
 @Controller('profiles')

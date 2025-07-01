@@ -3,12 +3,6 @@ import { ArticlesService } from './articles.service';
 export declare class ArticlesController {
     private articleService;
     constructor(articleService: ArticlesService);
-    viewArticle(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
-    togglePaywall(user: User, slug: string): Promise<{
-        article: import("./dto").ArticleDto;
-    }>;
     getAllArticles(user: User, tag?: string, author?: string, favorited?: string, limit?: number, offset?: number): Promise<{
         articles: import("./dto").ArticleDto[];
         articlesCount: number;
@@ -38,6 +32,12 @@ export declare class ArticlesController {
         article: import("./dto").ArticleDto;
     }>;
     unfavoriteArticle(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
+    togglePaywall(user: User, slug: string): Promise<{
+        article: import("./dto").ArticleDto;
+    }>;
+    viewArticle(user: User, slug: string): Promise<{
         article: import("./dto").ArticleDto;
     }>;
 }

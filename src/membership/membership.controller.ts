@@ -1,54 +1,47 @@
-import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
-import { User } from '@prisma/client';
-import { GetUser } from '../common/decorator/get-user.decorator';
-import { JwtGuard } from '../common/guard';
+import { Controller, Post, Put, Get, UseGuards, Body } from '@nestjs/common';
 import { MembershipService } from './membership.service';
+import { JwtGuard } from '../common/guard';
+import { GetUser } from '../common/decorator';
+import { User } from '@prisma/client';
 import {
+  MembershipActivateDto,
   MembershipDto,
   MembershipUpdateDto,
-  MembershipActivateDto,
-} from './dto/membership.dto';
+} from './dto';
 
-@UseGuards(JwtGuard)
 @Controller('membership')
 export class MembershipController {
   constructor(private membershipService: MembershipService) {}
 
   @Post()
+  @UseGuards(JwtGuard)
   async activateMembership(
     @GetUser() user: User,
     @Body('membership') dto: MembershipActivateDto,
   ): Promise<{ membership: MembershipDto }> {
-    return {
-      membership: await this.membershipService.activateMembership(user, dto),
-    };
+    const membership = await this.membershipService.activateMembership(
+      user,
+      dto.tier,
+    );
+    return { membership };
   }
 
   @Put()
+  @UseGuards(JwtGuard)
   async updateMembership(
     @GetUser() user: User,
     @Body('membership') dto: MembershipUpdateDto,
   ): Promise<{ membership: MembershipDto }> {
-    return {
-      membership: await this.membershipService.updateMembership(user, dto),
-    };
+    const membership = await this.membershipService.updateMembership(user, dto);
+    return { membership };
   }
 
   @Get()
+  @UseGuards(JwtGuard)
   async getMembership(
     @GetUser() user: User,
   ): Promise<{ membership: MembershipDto }> {
-    return {
-      membership: await this.membershipService.getMembership(user),
-    };
-  }
-
-  @Put('renew')
-  async renewMembership(
-    @GetUser() user: User,
-  ): Promise<{ membership: MembershipDto }> {
-    return {
-      membership: await this.membershipService.renewMembership(user),
-    };
+    const membership = await this.membershipService.getMembership(user);
+    return { membership };
   }
 }

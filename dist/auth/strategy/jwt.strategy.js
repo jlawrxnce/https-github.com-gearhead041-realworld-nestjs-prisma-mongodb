@@ -34,8 +34,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
                 username: true,
                 followers: true,
                 image: true,
-                membershipTier: true,
-                totalRevenue: true,
+                hasPaywall: true,
             },
         });
         return user;

@@ -12,190 +12,88 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MembershipService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
-const membership_dto_1 = require("./dto/membership.dto");
+const dto_1 = require("./dto");
 let MembershipService = class MembershipService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async activateMembership(user, dto) {
-        if (dto.tier === membership_dto_1.MembershipTier.Free) {
-            throw new common_1.UnprocessableEntityException('Cannot activate Free tier');
+    async activateMembership(user, tier) {
+        if (tier === dto_1.MembershipTier.Free) {
+            throw new common_1.UnprocessableEntityException('Cannot activate Free tier membership');
         }
-        const renewalDate = new Date();
-        if (dto.tier === membership_dto_1.MembershipTier.Trial) {
-            renewalDate.setDate(renewalDate.getDate() + 7);
-        }
-        else {
-            renewalDate.setMonth(renewalDate.getMonth() + 1);
-        }
-        const updatedUser = await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-                membershipTier: dto.tier,
-                membershipRenewalDate: renewalDate,
+        const membership = await this.prisma.membership.upsert({
+            where: {
+                userId: user.id,
+            },
+            update: {
+                tier,
+                renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+            create: {
+                userId: user.id,
+                tier,
+                renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
         });
-        return this.formatMembershipResponse(updatedUser);
+        return (0, dto_1.castToMembershipDto)(membership, user.username);
     }
     async updateMembership(user, dto) {
-        const currentUser = await this.prisma.user.findUnique({
-            where: { id: user.id },
-        });
-        if (!currentUser) {
-            throw new common_1.ForbiddenException('User not found');
-        }
-        if (currentUser.membershipTier === 'Free') {
-            throw new common_1.ForbiddenException('Free tier users cannot update membership');
-        }
-        if (currentUser.membershipTier === 'Gold' &&
-            dto.tier === membership_dto_1.MembershipTier.Trial) {
-            throw new common_1.UnprocessableEntityException('Gold users cannot downgrade to Trial tier');
-        }
-        if (currentUser.membershipTier === 'Gold' &&
-            dto.tier === membership_dto_1.MembershipTier.Free) {
-            const updatedUser = await this.prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    membershipAutoRenew: false,
-                },
-            });
-            return this.formatMembershipResponse(updatedUser);
-        }
-        const updatedUser = await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-                membershipTier: dto.tier,
-                membershipAutoRenew: dto.autoRenew,
+        const membership = await this.prisma.membership.findUnique({
+            where: {
+                userId: user.id,
             },
         });
-        return this.formatMembershipResponse(updatedUser);
+        if (!membership || membership.tier === dto_1.MembershipTier.Free) {
+            throw new common_1.ForbiddenException('Only paid members can update membership');
+        }
+        const updatedMembership = await this.prisma.membership.update({
+            where: {
+                userId: user.id,
+            },
+            data: {
+                tier: dto.tier,
+                autoRenew: dto.autoRenew,
+            },
+        });
+        return (0, dto_1.castToMembershipDto)(updatedMembership, user.username);
     }
     async getMembership(user) {
-        const userWithMembership = await this.prisma.user.findUnique({
-            where: { id: user.id },
-        });
-        if (!userWithMembership) {
-            throw new common_1.ForbiddenException('User not found');
-        }
-        return this.formatMembershipResponse(userWithMembership);
-    }
-    async renewMembership(user) {
-        const currentUser = await this.prisma.user.findUnique({
-            where: { id: user.id },
-        });
-        if (!currentUser) {
-            throw new common_1.ForbiddenException('User not found');
-        }
-        if (currentUser.membershipTier === 'Free') {
-            throw new common_1.ForbiddenException('Free tier users cannot renew membership');
-        }
-        let newRenewalDate;
-        if (currentUser.membershipTier === 'Trial') {
-            newRenewalDate = currentUser.membershipRenewalDate;
-            newRenewalDate.setDate(newRenewalDate.getDate() + 30);
-            const updatedUser = await this.prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    membershipTier: 'Gold',
-                    membershipRenewalDate: newRenewalDate,
-                },
-            });
-            return this.formatMembershipResponse(updatedUser);
-        }
-        if (currentUser.membershipRenewalDate) {
-            const currentRenewalDate = new Date(currentUser.membershipRenewalDate);
-            newRenewalDate = new Date(currentRenewalDate);
-            newRenewalDate.setDate(newRenewalDate.getDate() + 30);
-            const maxAllowedRenewalDate = new Date();
-            maxAllowedRenewalDate.setDate(maxAllowedRenewalDate.getDate() + 75);
-            if (newRenewalDate > maxAllowedRenewalDate) {
-                throw new common_1.ForbiddenException('Cannot renew membership more than 75 days in advance');
-            }
-        }
-        else {
-            newRenewalDate = new Date();
-            newRenewalDate.setMonth(newRenewalDate.getMonth() + 1);
-        }
-        const updatedUser = await this.prisma.user.update({
-            where: { id: user.id },
-            data: {
-                membershipRenewalDate: newRenewalDate,
+        const membership = await this.prisma.membership.findUnique({
+            where: {
+                userId: user.id,
             },
         });
-        return this.formatMembershipResponse(updatedUser);
+        if (!membership) {
+            return {
+                username: user.username,
+                tier: dto_1.MembershipTier.Free,
+                renewalDate: new Date(),
+                autoRenew: false,
+                totalRevenue: 0,
+            };
+        }
+        return (0, dto_1.castToMembershipDto)(membership, user.username);
     }
-    async toggleArticlePaywall(user, articleId) {
-        const currentUser = await this.prisma.user.findUnique({
-            where: { id: user.id },
-            include: { articles: true },
-        });
-        if (!currentUser) {
-            throw new common_1.ForbiddenException('User not found');
+    async checkGoldMembership(userId) {
+        if (!userId) {
+            return false;
         }
-        const article = currentUser.articles.find((a) => a.id === articleId);
-        if (!article) {
-            throw new common_1.ForbiddenException('You can only toggle paywall on your own articles');
-        }
-        if (currentUser.membershipTier === 'Trial' &&
-            !article.hasPaywall &&
-            currentUser.activePaywalls >= 3) {
-            throw new common_1.ForbiddenException('Trial users cannot have more than 3 active paywalls');
-        }
-        if (currentUser.membershipTier === 'Free') {
-            throw new common_1.ForbiddenException('Free tier users cannot use paywalls');
-        }
-        const newPaywallStatus = !article.hasPaywall;
-        const activePaywallsDelta = newPaywallStatus ? 1 : -1;
-        const [updatedArticle] = await Promise.all([
-            this.prisma.article.update({
-                where: { id: articleId },
-                data: { hasPaywall: newPaywallStatus },
-            }),
-            this.prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    activePaywalls: {
-                        increment: activePaywallsDelta,
-                    },
-                },
-            }),
-        ]);
-        return updatedArticle;
-    }
-    async trackArticleView(articleId, viewerId) {
-        const article = await this.prisma.article.findUnique({
-            where: { id: articleId },
-            include: { author: true },
-        });
-        if (!article)
-            return;
-        await this.prisma.article.update({
-            where: { id: articleId },
-            data: {
-                numViews: { increment: 1 },
-                viewerIds: { push: viewerId },
+        const membership = await this.prisma.membership.findUnique({
+            where: {
+                userId,
             },
         });
-        if (article.author.membershipTier === 'Gold' ||
-            article.author.membershipTier === 'Trial') {
-            await this.prisma.user.update({
-                where: { id: article.authorId },
-                data: {
-                    totalViews: { increment: 1 },
-                    totalRevenue: article.hasPaywall ? { increment: 0.25 } : undefined,
-                },
-            });
-        }
+        return (membership === null || membership === void 0 ? void 0 : membership.tier) === dto_1.MembershipTier.Gold;
     }
-    formatMembershipResponse(user) {
-        return {
-            username: user.username,
-            tier: user.membershipTier,
-            renewalDate: user.membershipRenewalDate,
-            autoRenew: user.membershipAutoRenew,
-            totalRevenue: user.totalRevenue,
-            totalViews: user.membershipTier === 'Free' ? null : user.totalViews,
-        };
+    async addRevenue(userId, amount) {
+        await this.prisma.membership.update({
+            where: { userId },
+            data: {
+                totalRevenue: {
+                    increment: amount,
+                },
+            },
+        });
     }
 };
 MembershipService = __decorate([

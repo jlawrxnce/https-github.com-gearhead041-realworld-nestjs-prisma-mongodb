@@ -7,7 +7,7 @@ function castToProfile(user, isFollowing) {
         bio: user.bio,
         image: user.image,
         following: isFollowing,
-        hasPaywall: user.hasPaywall,
+        hasPaywall: user.hasPaywall || false,
     };
 }
 exports.castToProfile = castToProfile;

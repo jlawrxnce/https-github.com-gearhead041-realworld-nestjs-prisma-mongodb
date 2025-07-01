@@ -1,55 +1,64 @@
 import {
+  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Injectable,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MembershipTier } from '@prisma/client';
+import { MembershipService } from '../../membership/membership.service';
 
 @Injectable()
 export class PaywallGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private membershipService: MembershipService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
     const slug = request.params.slug;
+    const user = request.user;
     const username = request.params.username;
 
-    if (!slug && !username) {
-      return true;
-    }
     if (slug) {
       const article = await this.prisma.article.findUnique({
         where: { slug },
       });
 
-      if (!article || !article.hasPaywall) {
+      if (!article) {
+        return true; // Let the controller handle 404
+      }
+
+      if (!article.hasPaywall) {
         return true;
       }
     }
+
     if (username) {
       const profile = await this.prisma.user.findUnique({
         where: { username: username },
       });
 
-      if (!profile || !profile.hasPaywall) {
+      if (!profile) {
+        return true;
+      }
+
+      if (!profile.hasPaywall) {
         return true;
       }
     }
 
     if (!user || !user.id) {
-      throw new ForbiddenException('Paywalled content requires authentication');
+      throw new ForbiddenException(
+        'This content requires Silver or Gold membership',
+      );
     }
 
-    const userWithMembership = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { membershipTier: true },
-    });
-
-    if (userWithMembership?.membershipTier === MembershipTier.Free) {
-      throw new ForbiddenException('This content requires a Gold membership');
+    const membership = await this.membershipService.getMembership(user);
+    if (!membership || membership.tier === 'Free') {
+      throw new ForbiddenException(
+        'This content requires Silver or Gold membership',
+      );
     }
 
     return true;

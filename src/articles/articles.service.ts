@@ -329,10 +329,30 @@ export class ArticlesService {
 
     // Check if user has appropriate membership tier
     const membership = await this.membershipService.getMembership(user);
-    if (!membership || membership.tier === 'Free') {
+    if (!membership || membership.tier === MembershipTier.Free) {
       throw new ForbiddenException(
-        'Only Silver or Gold members can create paywalls',
+        'Only Trial or Gold members can create paywalls',
       );
+    }
+
+    // For Trial users, check if they're trying to enable a paywall and already have 3 active paywalls
+    if (
+      membership.tier === MembershipTier.Trial &&
+      !article.hasPaywall &&
+      membership.activePaywalls >= 3
+    ) {
+      throw new ForbiddenException(
+        'Trial members can only have up to 3 active paywalls',
+      );
+    }
+
+    // Update active paywalls count if needed
+    if (!article.hasPaywall) {
+      // Adding a new paywall
+      await this.membershipService.incrementActivePaywalls(user.id);
+    } else {
+      // Removing a paywall
+      await this.membershipService.decrementActivePaywalls(user.id);
     }
 
     // Toggle paywall status
@@ -388,31 +408,40 @@ export class ArticlesService {
         where: { id: article.authorId },
       });
       const following = author?.followersIds?.includes(user.id) || false;
-      return castToArticle(article, user, article.tagList, castToProfile(author, following));
+      return castToArticle(
+        article,
+        user,
+        article.tagList,
+        castToProfile(author, following),
+      );
     }
 
     // Get author's membership tier to calculate revenue
     const author = await this.prisma.user.findUnique({
       where: { id: article.authorId },
       include: {
-        membership: true
-      }
+        membership: true,
+      },
     });
 
     if (author?.membership) {
+      // Calculate revenue based on membership tier
       const revenue =
         author.membership.tier === MembershipTier.Gold.toString()
           ? 0.25
-          : author.membership.tier === MembershipTier.Silver.toString()
+          : author.membership.tier === MembershipTier.Trial.toString()
           ? 0.10
           : 0;
 
       if (revenue > 0) {
         await this.membershipService.addRevenue(article.authorId, revenue);
       }
+      
+      // Increment total views for the author regardless of tier
+      await this.membershipService.incrementTotalViews(article.authorId);
     }
 
-    // Update view count
+    // Update view count for the article
     const updatedArticle = await this.prisma.article.update({
       where: { slug },
       data: {
@@ -430,7 +459,7 @@ export class ArticlesService {
       updatedArticle,
       user,
       updatedArticle.tagList,
-      authorProfile
+      authorProfile,
     );
   }
 }

@@ -64,6 +64,8 @@ model Membership {
   renewalDate DateTime @default(now())
   autoRenew Boolean @default(false)
   totalRevenue Float @default(0)
+  totalViews Int @default(0)
+  activePaywalls Int @default(0)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
 }

@@ -1,4 +1,13 @@
-import { Controller, Post, Put, Get, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Put,
+  Get,
+  UseGuards,
+  Body,
+  ForbiddenException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { MembershipService } from './membership.service';
 import { JwtGuard } from '../common/guard';
 import { GetUser } from '../common/decorator';
@@ -7,6 +16,7 @@ import {
   MembershipActivateDto,
   MembershipDto,
   MembershipUpdateDto,
+  MembershipTier,
 } from './dto';
 
 @Controller('membership')
@@ -32,6 +42,16 @@ export class MembershipController {
     @GetUser() user: User,
     @Body('membership') dto: MembershipUpdateDto,
   ): Promise<{ membership: MembershipDto }> {
+    // Prevent Gold users from demoting to Trial
+    if (
+      dto.tier === MembershipTier.Trial &&
+      (await this.membershipService.getMembership(user)).tier === MembershipTier.Gold
+    ) {
+      throw new UnprocessableEntityException(
+        'Gold users cannot downgrade to Trial membership',
+      );
+    }
+
     const membership = await this.membershipService.updateMembership(user, dto);
     return { membership };
   }
@@ -42,6 +62,15 @@ export class MembershipController {
     @GetUser() user: User,
   ): Promise<{ membership: MembershipDto }> {
     const membership = await this.membershipService.getMembership(user);
+    return { membership };
+  }
+
+  @Put('renew')
+  @UseGuards(JwtGuard)
+  async renewMembership(
+    @GetUser() user: User,
+  ): Promise<{ membership: MembershipDto }> {
+    const membership = await this.membershipService.renewMembership(user);
     return { membership };
   }
 }
